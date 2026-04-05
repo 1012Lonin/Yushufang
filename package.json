@@ -1,7 +1,7 @@
 {
-  "name": "clawd",
-  "version": "3.6.0",
-  "description": "AI 朝廷 - 多 Agent 协作框架",
+  "name": "yushufang",
+  "version": "0.0.1",
+  "description": "御书房 - 个人学术开发者的 AI 多 Agent 协作系统，基于 danghuangshang 上游定制",
   "main": "index.js",
   "scripts": {
     "test": "jest",
@@ -20,9 +20,10 @@
     "ai",
     "multi-agent",
     "openclaw",
-    "automation"
+    "yushufang",
+    "academic"
   ],
-  "author": "菠萝菠菠",
+  "author": "Lonin",
   "license": "MIT",
   "dependencies": {
     "@notionhq/client": "^5.9.0",
@@ -37,10 +38,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/wanikua/danghuangshang.git"
+    "url": "https://github.com/1012Lonin/Yushufang.git"
   },
   "bugs": {
-    "url": "https://github.com/wanikua/danghuangshang/issues"
+    "url": "https://github.com/1012Lonin/Yushufang/issues"
   },
-  "homepage": "https://github.com/wanikua/danghuangshang#readme"
+  "homepage": "https://github.com/1012Lonin/Yushufang#readme"
 }

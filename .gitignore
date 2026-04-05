@@ -11,6 +11,7 @@ openclaw.json
 
 # 状态目录
 .openclaw/
+*.sqlite
 
 # 系统文件
 *.log
