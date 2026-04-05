@@ -682,7 +682,7 @@
       "name": "户部日报",
       "schedule": { "kind": "cron", "expr": "0 23 * * *" },
       "agentId": "hubu",
-      "prompt": "读取 workspace/data/api-usage.json，生成户部日报（今日消耗、本月累计、部门排行、异常波动、优化建议）。",
+      "prompt": "读取 workspace/data/daily-snapshots/YYYY-MM-DD.json（今日快照，若不存在则读 workspace/data/api-usage.json 作为后备）和 workspace/data/rolling/rolling-window.json（5小时窗口），生成户部日报：今日消耗、本周累计、5小时窗口状态、本月进度、部门排行（估算）、异常波动、优化建议。格式见 persona 模板。",
       "enabled": true
     },
     {
@@ -690,7 +690,7 @@
       "name": "户部周报",
       "schedule": { "kind": "cron", "expr": "0 9 * * 1" },
       "agentId": "hubu",
-      "prompt": "读取过去 7 天的 workspace/data/api-usage.json 历史数据，生成户部周报（趋势分析、预测、优化建议、成本排名）。",
+      "prompt": "读取 workspace/data/weekly-snapshots/YYYY-WXX.json（本周汇总）和 workspace/data/daily-snapshots/ 下过去7天的每日快照，生成户部周报：本周总量、日均趋势、5小时窗口异常天数、环比上周、部门排行（估算）、成本预测、优化建议。格式见 persona 模板。",
       "enabled": true
     },
     {
@@ -698,7 +698,7 @@
       "name": "户部月报",
       "schedule": { "kind": "cron", "expr": "59 23 28-31 * *" },
       "agentId": "hubu",
-      "prompt": "读取全月数据，生成户部月报（总消耗、预算执行率、部门占比、最贵日期、下月预算建议）。注意：如果今天不是本月最后一天则跳过不生成报告。",
+      "prompt": "读取 workspace/data/daily-snapshots/ 目录下当月所有每日快照，生成户部月报：总消耗、预算执行率、部门占比（估算）、最贵的一天、5小时窗口超限天数、下月预算建议。如今天不是本月最后一天则跳过不生成报告。格式见 persona 模板。",
       "enabled": true
     },
     {
