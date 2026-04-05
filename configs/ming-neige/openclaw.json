@@ -3,7 +3,7 @@
   "models": {
     "providers": {
       "anthropic": {
-        "baseUrl": "https://api.anthropic.com/v1/messages",
+        "baseUrl": "https://api.anthropic.com",
         "apiKey": "YOUR_ANTHROPIC_API_KEY",
         "api": "anthropic-messages",
         "models": [
@@ -48,7 +48,7 @@
   },
   "agents": {
     "defaults": {
-      "workspace": "/home/YOUR_USERNAME/clawd",
+      "workspace": "$HOME/clawd",
       "model": {
         "primary": "your-provider/fast-model"
       },
@@ -82,11 +82,13 @@
             "xingbu",
             "hanlin_zhang",
             "qijuzhu",
+            "dianbosi",
             "guozijian",
             "taiyiyuan",
             "neiwufu",
             "yushanfang"
-          ]
+          ],
+          "maxConcurrent": 4
         }
       },
       {
@@ -377,6 +379,21 @@
         "sandbox": {
           "mode": "off"
         }
+      },
+      {
+        "id": "dianbosi",
+        "name": "典簿司",
+        "workspace": "$HOME/clawd-dianbosi",
+        "model": {
+          "primary": "your-provider/fast-model"
+        },
+        "identity": {
+          "name": "典簿司",
+          "theme": "你是典簿司，专精记忆管理、信息整理、知识归档。回答用中文，细致认真。\n\n【核心职责】\n1. 记忆录入：读取指定 agent 的 workspace（.auto-log/ + reports/ + git log），提取关键信息并格式化为标准模板，存入该 agent 的 memory/ 目录\n2. 周度审核：遍历所有 agent 的 memory/ 目录，交叉比对一致性，检查过期条目，生成【记忆审核报告】\n3. 被动修正：根据皇帝/司礼监指令修正冲突记忆\n\n【三级收集机制】\n- 第一级：Agent 工作简报（workspace/reports/）\n- 第二级：Git 变更自动捕获（.auto-log/）\n- 第三级：司礼监触发典簿司扫描（兜底）\n\n【原则】不主动调用其他 agent，不直接修改记忆先提建议，被动模式不主动发言。"
+        },
+        "sandbox": {
+          "mode": "off"
+        }
       }
     ]
   },
@@ -480,6 +497,11 @@
         "yushanfang": {
           "name": "御膳房",
           "token": "YOUR_YUSHANFANG_BOT_TOKEN",
+          "groupPolicy": "open"
+        },
+        "dianbosi": {
+          "name": "典簿司",
+          "token": "YOUR_DIANBOSI_BOT_TOKEN",
           "groupPolicy": "open"
         }
       },
@@ -637,6 +659,13 @@
         "channel": "discord",
         "accountId": "yushanfang"
       }
+    },
+    {
+      "agentId": "dianbosi",
+      "match": {
+        "channel": "discord",
+        "accountId": "dianbosi"
+      }
     }
   ],
   "messages": {
@@ -694,6 +723,14 @@
       "schedule": { "kind": "cron", "expr": "0 */2 * * *" },
       "agentId": "gongbu",
       "prompt": "检查磁盘空间、内存使用、Docker 容器状态。如有异常立即汇报司礼监，正常则记录日志。",
+      "enabled": true
+    },
+    {
+      "id": "guozijian-daily-plan",
+      "name": "国子监每日计划推送",
+      "schedule": { "kind": "cron", "expr": "0 8 * * *" },
+      "agentId": "guozijian",
+      "prompt": "扫描所有活跃的学习计划（workspace/plans/ 下的计划文件夹），根据各自周期规划生成今日学习内容，汇总给皇帝。",
       "enabled": true
     }
   ]
