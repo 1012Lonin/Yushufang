@@ -39,12 +39,19 @@ log() {
 }
 
 # ─── 获取总量 ──────────────────────────────────────────────────
+FETCH_OK=0
 fetch_total() {
   local token
   token=$(curl -s "$GUI_URL/api/tokens" \
     -H "Authorization: Bearer ${BOLUO_AUTH_TOKEN:-}" \
-    | python3 -c 'import sys,json; print(json.load(sys.stdin).get("totalTokens",0))' 2>/dev/null || echo 0)
-  echo "${token:-0}"
+    | python3 -c 'import sys,json; print(json.load(sys.stdin).get("totalTokens",-1))' 2>/dev/null)
+  if [[ -z "$token" || ! "$token" =~ ^-?[0-9]+$ ]]; then
+    FETCH_OK=0
+    echo "0"
+    return 1
+  fi
+  FETCH_OK=1
+  echo "$token"
 }
 
 # ─── 冷却检查 ──────────────────────────────────────────────────
@@ -216,6 +223,13 @@ check_thresholds() {
 main() {
   local total_tokens
   total_tokens=$(fetch_total)
+
+  if [[ "$FETCH_OK" -eq 0 ]]; then
+    log "ERROR: failed to fetch total tokens from GUI"
+    echo "[hubu] ERROR: failed to fetch total tokens from $GUI_URL"
+    return 1
+  fi
+
   local progress
   progress=$(python3 -c "print(round(${total_tokens} / ${MONTHLY_LIMIT} * 100, 1))")
 

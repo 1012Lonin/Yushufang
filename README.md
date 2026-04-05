@@ -45,7 +45,7 @@ bash scripts/full-install.sh
 - [翰林院内部流水线](#翰林院内部流水线) — 创作调度的 5 级协作
 - [自动化任务](#自动化任务) — 7 项 Cron 任务详解
 - [三级记忆收集](#三级记忆收集) — 典簿司的三级机制
-- [通信架构](#通信架构) — Discord/飞书/Web GUI 三路通信
+- [通信架构](#通信架构) — Discord / Web GUI 两路通信
 - [模型配置指南](#模型配置指南) — Provider 配置与切换
 - [费用优化建议](#费用优化建议)
 - [部署方案](#部署方案)
@@ -583,17 +583,17 @@ flowchart TD
 
 ## 通信架构
 
-御书房支持三路通信，通过 OpenClaw Gateway（端口 18789）统一调度：
+御书房支持两路通信，通过 OpenClaw Gateway（端口 18789）统一调度：
 
 ```
 ┌──────────────────────────────────────────────────┐
 │                   OpenClaw Gateway               │
 │                   Port: 18789                    │
 │                                                  │
-│  Discord (20 Bot)    Feishu (1 App)    Web GUI   │
-│  allowBots:mentions  单Bot模式       Port: 18795 │
-│       │                  │               │       │
-│       └──────────────────┼───────────────┘       │
+│  Discord (20 Bot)               Web GUI          │
+│  allowBots:mentions            Port: 18795       │
+│       │                              │          │
+│       └──────────────────────────────┘          │
 │                          ▼                       │
 │              ┌─────────────────────┐             │
 │              │  消息路由 / Binding  │             │
@@ -603,7 +603,6 @@ flowchart TD
 ```
 
 - **Discord**：20 个 Bot 分别对应 20 个 agent，通过 `@mention` 路由，`allowBots: "mentions"` 防止 Bot 互触发
-- **飞书**：单 Bot 模式（`appId: YOUR_FEISHU_APP_ID`），司礼监通过 `sessions_spawn` 内部调度
 - **Web GUI**：React + Vite 前端（端口 18795）+ Express 后端，提供朝堂总览 + 会话管理
 
 > **跨频道通信说明**：Discord `@mention` **只在同频道内有效**——司礼监 `@兵部` 需要两者都在同一频道。推荐将所有 agent 加入共享工作频道，派发结果也发到这里。跨频道场景使用 `sessions_spawn` / `sessions_send`，这是 OpenClaw 内部机制，**不受频道限制**，无需共享频道也能通信。
