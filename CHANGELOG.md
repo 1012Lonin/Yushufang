@@ -11,18 +11,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0
 
 ### Added
 
-- **户部阈值系统重构**：新增 `scripts/hubu_data_collect.py`，替代旧 Shell 脚本
+- **户部阈值系统重构**：重写 `scripts/hubu_data_collect.py`，替代旧 Shell 脚本
   - 5 小时滚动窗口配额（Soft: 80,000 / Hard: 120,000）
   - 周配额（Soft: 800,000 / Hard: 1,000,000）
   - 多层级告警：Soft → 记录日志；Hard → 发 Discord @司礼监；月额 90% → @司礼监 + @皇帝
   - 告警冷却机制：同类告警 4 小时内不重复发送
   - 时间序列数据：`ticks/`、`daily-snapshots/`、`weekly-snapshots/`、`rolling/` 四类文件
   - 向后兼容 `api-usage.json`，现有 LLM prompt 无需改动
-- **`scripts/hubu-data-collect.sh`** 重写为薄封装，直接调用 Python 模块
+- **`scripts/hubu-data-collect.sh`** 重写为纯 bash 薄封装，直接调用 Python 模块
 - **`.env.example`** 新增户部阈值环境变量说明（HUBU_ROLLING_*/HUBU_WEEKLY_*/HUBU_DAILY_* 等）
+- **README SVG 图表**：`images/dispatch-flow.svg`（核心调度链路）、`images/org-structure.svg`（组织架构图）
 
 ### Changed
 
+- **版本号统一为 1.1.0**：`package.json`、`README.md` badge 同步更新
 - **户部 cron prompt**（`configs/ming-neige/openclaw.json`）：日报/周报/月报均改为指向新的结构化数据文件路径
 - **户部 persona**（`configs/ming-neige/agents/hubu.md`）：补充新数据文件说明、阈值表、含 5h 窗口的日报/周报/月报模板
 - **README.md**：
@@ -30,7 +32,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0
   - 补充跨频道通信说明（Discord @mention 只在同频道内有效，跨频道用 `sessions_spawn`/`sessions_send`）
   - 户部数据管道章节更新为 v1.1.0 重构说明，含阈值表和自定义方式
   - 底部新增 CHANGELOG 跳转链接
-  - 「与上游差异」表格补充户部阈值重构说明
+
+### Removed
+
+- **清理上游遗留文件**：移除飞书配置（`configs/feishu*/`）、维权证据（`evidence/`）、上游审查报告（`BUG-REPORT.md`）、原创声明文档（`docs/originality.md`）、菠萝王朝介绍（`docs/pineapple-dynasty.md`）、英文版 README（`README_EN.md`）
+- **删除未使用的飞书脚本/文档**：7 个飞书相关脚本和文档
+- **`skills/ai-court-skill/`** 中飞书 agent 配置及引用文档
+
+### Fixed
+
+- README SVG 图表路径修正（中文文件名改为英文）
 
 ---
 

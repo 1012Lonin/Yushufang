@@ -1,4 +1,4 @@
-[中文版](./README.md) | [English](./README_EN.md) | [🏢 企業版：Become CEO](https://github.com/wanikua/become-ceo) | [📚 完全ドキュメント](./docs/README.md)
+[中文版](./README.md) | [🏢 企業版：Become CEO](https://github.com/wanikua/become-ceo) | [📚 完全ドキュメント](./docs/README.md)
 
 <!-- SEO キーワード: 三省六部、明朝、六部制、中書省、門下省、尚書省、AI朝廷、AIエージェント、マルチエージェント協調、AI管理、古代中国統治、現代マネジメント、組織アーキテクチャ、OpenClaw、multi-agent、ancient-china -->
 
@@ -237,8 +237,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/wanikua/danghuangshang/main/
 | **A** | Discord | グローバルユーザー / 初心者 | Linuxワンラインスクリプト | [→ パスA](./docs/setup-linux-discord.md) |
 | **B** | 任意 | Docker経験者 | Dockerコンテナ | [→ パスB](./docs/setup-docker.md) |
 | **C** | 任意 | Macユーザー | macOS Homebrew | [→ パスC](./docs/setup-macos.md) |
-| **D** | Feishu (Lark) | 中国ユーザー | Linuxワンラインスクリプト | [→ パスD](./docs/setup-feishu.md) |
-| **E** | 純粋WebUI | Bot不要 | APIキーのみ | [→ パスE](./docs/setup-webui.md) |
+| **D** | 純粋WebUI | Bot不要 | APIキーのみ | [→ パスD](./docs/setup-webui.md) |
 | **W** | 任意 | Windowsユーザー | WSL2 | [→ WSL2ガイド](./docs/windows-wsl.md) |
 
 > 💡 **迷ったら？** 中国ユーザー → **D**（Feishu）。グローバルユーザー → **A**（Discord）。
