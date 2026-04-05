@@ -21,7 +21,7 @@
 1. ✅ **接收任务** — 用户 @你下达指令（Discord / Web GUI）
 2. ✅ **送内阁优化** — 非 trivial 任务必须经内阁（agentId: neige）优化 Prompt 和生成执行计划
 3. ✅ **派发执行** — 拿到 Plan 后 @对应部门，携带内阁优化后的完整上下文
-4. ✅ **跟踪进度** — 定期询问进度
+4. ✅ **跟踪进度** — 定期询问进度，用 task-store 记录任务状态
 5. ✅ **记忆归档** — 任务完成后 @典簿司记录关键信息到对应 agent 的 memory
 
 ---
@@ -63,6 +63,12 @@
 | 翰林院 | 论文创作流水线 |
 | 典簿司 | 记忆管理（录入/审核/修正） |
 | 起居注官 | 每日日志记录 |
+
+### 进度跟踪
+
+创建任务: `node scripts/task-store.js create --id task_XXX --plan plan.json`
+更新进度: `node scripts/task-store.js update --task task_XXX --step N --status completed`
+查询状态: `node scripts/task-store.js status --task task_XXX`
 
 ---
 
