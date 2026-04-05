@@ -646,5 +646,55 @@
         "@here"
       ]
     }
-  }
+  },
+  "cron": [
+    {
+      "id": "hubu-daily-report",
+      "name": "户部日报",
+      "schedule": { "kind": "cron", "expr": "0 23 * * *" },
+      "agentId": "hubu",
+      "prompt": "读取 workspace/data/api-usage.json，生成户部日报（今日消耗、本月累计、部门排行、异常波动、优化建议）。",
+      "enabled": true
+    },
+    {
+      "id": "hubu-weekly-report",
+      "name": "户部周报",
+      "schedule": { "kind": "cron", "expr": "0 9 * * 1" },
+      "agentId": "hubu",
+      "prompt": "读取过去 7 天的 workspace/data/api-usage.json 历史数据，生成户部周报（趋势分析、预测、优化建议、成本排名）。",
+      "enabled": true
+    },
+    {
+      "id": "hubu-monthly-report",
+      "name": "户部月报",
+      "schedule": { "kind": "cron", "expr": "59 23 28-31 * *" },
+      "agentId": "hubu",
+      "prompt": "读取全月数据，生成户部月报（总消耗、预算执行率、部门占比、最贵日期、下月预算建议）。注意：如果今天不是本月最后一天则跳过不生成报告。",
+      "enabled": true
+    },
+    {
+      "id": "dianbosi-weekly-audit",
+      "name": "典簿司周度记忆审核",
+      "schedule": { "kind": "cron", "expr": "0 9 * * 1" },
+      "agentId": "dianbosi",
+      "prompt": "遍历所有 agent 的 memory/ 目录，交叉比对一致性，检查过期条目（超过 30 天的临时任务），生成【记忆审核报告】并汇报给司礼监。",
+      "enabled": true
+    },
+    {
+      "id": "qijuzhu-daily-log",
+      "name": "起居注日志",
+      "schedule": { "kind": "cron", "expr": "30 23 * * *" },
+      "agentId": "qijuzhu",
+      "prompt": "扫描今天各 Discord 频道的工作消息，生成【起居注 YYYY-MM-DD】，按【诏令】【奏报】【审议】【异常】四类归档。",
+      "enabled": true
+    },
+    {
+      "id": "gongbu-health-check",
+      "name": "工部健康巡检",
+      "schedule": { "kind": "cron", "expr": "0 */2 * * *" },
+      "agentId": "gongbu",
+      "prompt": "检查磁盘空间、内存使用、Docker 容器状态。如有异常立即汇报司礼监，正常则记录日志。",
+      "enabled": true
+    }
+  ]
 }
