@@ -103,6 +103,8 @@ bash scripts/full-install.sh
  └──────────┘
 ```
 
+![核心调度链路](./images/dispatch-flow.svg)
+
 ### 部门一览表
 
 | Agent | 模型 | 沙箱 | 核心职责 | 触发方式 |
@@ -189,6 +191,8 @@ bash scripts/full-install.sh
     │  内务府     御膳房          │
     └────────────────────────────┘
 ```
+
+![组织架构图](./images/org-structure.svg)
 
 ### Mermaid 完整调度图
 

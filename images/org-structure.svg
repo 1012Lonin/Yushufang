@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 950" width="100%" height="100%">
+    <defs>
+        <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+            <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.05" />
+        </filter>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748B" />
+        </marker>
+        <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563EB" />
+        </marker>
+        <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#D97706" />
+        </marker>
+        <style>
+            .bg { fill: #F8FAFC; }
+            .box { fill: #FFFFFF; stroke: #CBD5E1; stroke-width: 2px; rx: 8px; }
+            .box-gray { fill: #F1F5F9; stroke: #CBD5E1; stroke-width: 2px; rx: 8px; }
+            .title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 600; fill: #0F172A; }
+            .text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; fill: #334155; }
+            .text-bold { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; fill: #1E293B; }
+            .text-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; fill: #64748B; }
+            .line { stroke: #64748B; stroke-width: 2px; fill: none; }
+            .line-dashed { stroke: #64748B; stroke-width: 2px; fill: none; stroke-dasharray: 6 4; }
+        </style>
+    </defs>
+
+    <rect class="bg" width="100%" height="100%" />
+
+    <rect class="box" x="250" y="30" width="500" height="60" filter="url(#shadow)" />
+    <text class="title" x="500" y="55" text-anchor="middle">皇帝 (你)</text>
+    <text class="text" x="500" y="75" text-anchor="middle">@司礼监 / Web GUI / 飞书 下旨</text>
+
+    <path class="line" d="M 500 90 L 500 120" marker-end="url(#arrow)" />
+
+    <rect class="box" x="250" y="130" width="500" height="70" filter="url(#shadow)" />
+    <text class="title" x="500" y="160" text-anchor="middle">司礼监 (调度中枢)</text>
+    <text class="text-mono" x="500" y="185" text-anchor="middle">快模型 | sandbox: off | maxConcurrent: 4 | subagents: 15 个</text>
+
+
+    <path class="line" d="M 500 200 L 500 410" marker-end="url(#arrow)" />
+    
+    <path class="line" d="M 500 230 L 280 230 L 280 250" marker-end="url(#arrow)" />
+    
+    <path class="line" d="M 500 230 L 720 230 L 720 250" marker-end="url(#arrow)" />
+
+
+    <rect class="box" x="200" y="260" width="160" height="80" filter="url(#shadow)" />
+    <text class="title" x="280" y="285" text-anchor="middle">内阁</text>
+    <text class="text" x="280" y="310" text-anchor="middle">Prompt 优化</text>
+    <text class="text" x="280" y="330" text-anchor="middle">强 / 无子代</text>
+
+    <path class="line-dashed" stroke="#D97706" d="M 280 340 L 280 380 L 490 380" marker-end="url(#arrow-orange)" />
+    <text class="text-mono" x="385" y="370" text-anchor="middle" fill="#D97706">返回Prompt + Plan</text>
+
+    <rect class="box" x="640" y="260" width="160" height="80" filter="url(#shadow)" />
+    <text class="title" x="720" y="285" text-anchor="middle">典簿司</text>
+    <text class="text" x="720" y="310" text-anchor="middle">记忆管理</text>
+    <text class="text" x="720" y="330" text-anchor="middle">快模型 | 无/无子代</text>
+
+
+    <rect class="box-gray" x="230" y="420" width="460" height="190" filter="url(#shadow)" />
+    <text class="title" x="460" y="445" text-anchor="middle">六部执行层</text>
+
+    <text class="text-bold" x="260" y="475">兵部(开发)</text>
+    <text class="text" x="340" y="475">── push → 自动触发审查</text>
+
+    <text class="text-bold" x="260" y="500">户部(API)</text>
+    <text class="text" x="340" y="500">── cron: 日报/周报/月报</text>
+
+    <text class="text-bold" x="260" y="525">礼部(文案)</text>
+
+    <text class="text-bold" x="260" y="550">工部(运维)</text>
+    <text class="text" x="340" y="550">── cron: 每 2h 巡检</text>
+
+    <text class="text-bold" x="260" y="575">吏部(知识库)</text>
+    <text class="text" x="350" y="575">── 其他 agent 直接读其 workspace</text>
+
+    <text class="text-bold" x="260" y="600">刑部(法务)</text>
+    <text class="text" x="340" y="600">── 翰林院调用: 引用审计</text>
+
+    <path class="line-dashed" stroke="#2563EB" d="M 500 470 L 750 470" marker-end="url(#arrow-blue)" />
+    <text class="text-mono" x="625" y="445" text-anchor="middle" fill="#2563EB">GitHub webhook</text>
+    <text class="text-mono" x="625" y="462" text-anchor="middle" fill="#2563EB">+ 手动@</text>
+
+    <rect class="box" x="760" y="440" width="160" height="90" filter="url(#shadow)" stroke="#2563EB" />
+    <text class="title" x="840" y="465" text-anchor="middle" fill="#1E3A8A">都察院</text>
+    <text class="text" x="840" y="490" text-anchor="middle">代码审查 / 独立</text>
+    <text class="text" x="840" y="510" text-anchor="middle">强模型 / 独立</text>
+
+
+    <path class="line" d="M 460 610 L 460 690" marker-end="url(#arrow)" />
+    <text class="text-mono" x="475" y="655" fill="#059669">sessions_spawn</text>
+
+    <rect class="box" x="300" y="700" width="380" height="170" filter="url(#shadow)" />
+    <text class="title" x="490" y="730" text-anchor="middle">翰林院 (创作流水线)</text>
+
+    <text class="text" x="330" y="760">掌院学士 (强, 600s, 统筹+终审)</text>
+    <text class="text" x="330" y="785">├─ 修撰 (强) ──→ 庶吉士 (快)</text>
+    <text class="text" x="330" y="810">├─ 编修 (强) ──→ 庶吉士 (快)</text>
+    <text class="text" x="330" y="835">├─ 检讨 (快)</text>
+    <text class="text" x="330" y="860">└─ 庶吉士 (快)</text>
+
+
+    <path class="line-dashed" d="M 250 165 L 150 165 L 150 730" marker-end="url(#arrow)" />
+
+    <rect class="box" x="40" y="740" width="220" height="120" filter="url(#shadow)" />
+    <text class="title" x="150" y="770" text-anchor="middle">生活辅助</text>
+    <text class="text-mono" x="150" y="795" text-anchor="middle">可选, 快模型</text>
+    <text class="text" x="150" y="820" text-anchor="middle">起居注官 ｜ 国子监 ｜ 太医院</text>
+    <text class="text" x="150" y="845" text-anchor="middle">内务府 ｜ 御膳房</text>
+
+</svg>
