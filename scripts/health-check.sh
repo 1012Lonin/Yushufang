@@ -59,6 +59,14 @@ send_alert() {
   
   # 飞书告警
   if [ "$ALERT_CHANNEL" = "feishu" ] && [ -n "$FEISHU_WEBHOOK" ]; then
+    local alert_icon alert_color
+    if [ "$level" = 'critical' ]; then
+      alert_icon='🚨 严重告警'
+      alert_color='red'
+    else
+      alert_icon='⚠️ 警告'
+      alert_color='orange'
+    fi
     curl -s -X POST "$FEISHU_WEBHOOK" \
       -H "Content-Type: application/json" \
       -d "{
@@ -67,9 +75,9 @@ send_alert() {
           \"header\": {
             \"title\": {
               \"tag\": \"plain_text\",
-              \"content\": \"${level = 'critical' ? '🚨 严重告警' : '⚠️ 警告'} - $title\"
+              \"content\": \"${alert_icon} - $title\"
             },
-            \"template\": \"${level = 'critical' ? 'red' : 'orange'}\"
+            \"template\": \"${alert_color}\"
           },
           \"elements\": [
             {
@@ -83,16 +91,24 @@ send_alert() {
         }
       }" || true
   fi
-  
+
   # Discord 告警
   if [ "$ALERT_CHANNEL" = "discord" ] && [ -n "$DISCORD_WEBHOOK" ]; then
+    local discord_icon discord_color
+    if [ "$level" = 'critical' ]; then
+      discord_icon='🚨 严重告警'
+      discord_color='15158332'
+    else
+      discord_icon='⚠️ 警告'
+      discord_color='15105570'
+    fi
     curl -s -X POST "$DISCORD_WEBHOOK" \
       -H "Content-Type: application/json" \
       -d "{
         \"embeds\": [{
-          \"title\": \"${level = 'critical' ? '🚨 严重告警' : '⚠️ 警告'} - $title\",
+          \"title\": \"${discord_icon} - $title\",
           \"description\": \"$message\",
-          \"color\": ${level = 'critical' ? '15158332' : '15105570'}
+          \"color\": ${discord_color}
         }]
       }" || true
   fi
