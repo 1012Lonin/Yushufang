@@ -1,13 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env zsh
 # ============================================
 # 御书房 · 交互式安装配置脚本
 #
+# 依赖：zsh（macOS/Linux 默认）、jq、openclaw
 # 用法：
-#   bash scripts/interactive-install.sh
-#
-# 支持：
-#   - 安装：按部门选择性安装 / 分 Agent 模型配置
-#   - 配置：分 Agent Discord Token 配置
+#   zsh scripts/interactive-install.sh
 # ============================================
 
 set -euo pipefail
@@ -15,19 +12,19 @@ set -euo pipefail
 # ============================================
 # 颜色常量
 # ============================================
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m'
+CYAN=$'\033[0;36m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[1;33m'
+RED=$'\033[0;31m'
+BLUE=$'\033[0;34m'
+BOLD=$'\033[1m'
+NC=$'\033[0m'
 
 # ============================================
 # 脚本路径
 # ============================================
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SCRIPT_DIR="${0:a:h}"
+PROJECT_ROOT="${SCRIPT_DIR:h}"
 CFG_FILE="$SCRIPT_DIR/interactive-install.cfg"
 
 # ============================================
