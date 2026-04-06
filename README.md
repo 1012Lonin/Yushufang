@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/框架-OpenClaw-blue?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Agent-20-green?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Cron-7-orange?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/版本-1.1.0-red?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/版本-1.1.1-red?style=for-the-badge" />
 </p>
 
 <p align="center">

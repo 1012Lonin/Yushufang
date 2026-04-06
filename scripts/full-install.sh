@@ -130,7 +130,7 @@ echo ""
 # ============================================
 
 echo ""
-echo -e "${BLUE}[2.5/7] 配置 AI 模型...${NC}"
+echo -e "${BLUE}[2/7] 配置 AI 模型...${NC}"
 echo ""
 echo "  常用 API 提供商："
 echo "  - DeepSeek: https://platform.deepseek.com"
@@ -163,7 +163,7 @@ echo ""
 # 步骤 3: 备份现有配置
 # ============================================
 
-echo -e "${BLUE}[4/7] 配置处理...${NC}"
+echo -e "${BLUE}[3/7] 配置处理...${NC}"
 
 CONFIG_DIR="$HOME/.openclaw"
 CLAWDBOT_CONFIG="$HOME/.clawdbot/openclaw.json"
@@ -206,7 +206,7 @@ echo ""
 # 步骤 4: 生成配置
 # ============================================
 
-echo -e "${BLUE}[5/7] 生成配置...${NC}"
+echo -e "${BLUE}[4/7] 生成配置...${NC}"
 
 # 确保目标目录存在（修复：/root/.openclaw 可能不存在）
 mkdir -p "$(dirname "$CONFIG_FILE")" || {

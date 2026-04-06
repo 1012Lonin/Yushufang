@@ -7,6 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0
 
 ---
 
+## [1.1.1] — 2026-04-06
+
+### Fixed
+
+- **hubu-data-collect.sh**: 修复 JSON 注入风险，所有 Python heredoc 中的 shell 变量改为环境变量传参（api-usage.json / tick / rolling / daily-snapshots / weekly-snapshots）
+- **scripts/health-check.sh**: 修复飞书/Discord 告警中 JavaScript 三元运算符语法错误（`${level = 'critical' ? ...}` 在 bash 中不生效），改为 if-then-else 变量
+- **scripts/cleanup-repo.sh**: 添加缺失的 `CYAN` 颜色变量定义
+- **scripts/test-all-installs.sh**: `set -uo pipefail` 修正为 `set -euo pipefail`（缺少 `-e`）
+- **scripts/full-install.sh**: 修复步骤编号跳号（[2.5/7] → [2/7]，[4/7] → [3/7]，[5/7] → [4/7]）
+- **.env.example**: 移除重复的 `DISCORD_DIANBOSI_TOKEN` 字段
+
+---
+
 ## [1.1.0] — 2026-04-06
 
 ### Added
