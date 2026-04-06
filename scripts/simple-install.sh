@@ -129,6 +129,11 @@ echo -e "  ${YELLOW}i${NC} 检测到 $AGENT_COUNT 个 Agent"
 echo -e "  ${CYAN}下载 Agent 人设...${NC}"
 mkdir -p "$CONFIG_DIR/agents"
 while IFS= read -r agent_id; do
+  # 安全校验：拒绝含路径遍历字符的 agent_id
+  if [[ ! "$agent_id" =~ ^[A-Za-z0-9._-]+$ ]]; then
+    echo -e "    ${RED}✗ 跳过不安全的 agent_id：$agent_id${NC}"
+    continue
+  fi
   curl -fsSL "https://raw.githubusercontent.com/1012Lonin/Yushufang/main/configs/$REGIME/agents/${agent_id}.md" \
     -o "$CONFIG_DIR/agents/${agent_id}.md" 2>/dev/null && echo -e "    ${GREEN}✓${NC} $agent_id" || echo -e "    ${YELLOW}⚠${NC} $agent_id (无独立人设)"
 done <<< "$AGENT_LIST"
@@ -137,32 +142,33 @@ echo -e "  ${GREEN}✓${NC} Agent 人设下载完成"
 # 移动模板到目标位置
 mv "$TEMP_CONFIG" "$CONFIG_DIR/openclaw.json"
 
-# 使用 Python 更新 LLM 配置
-python3 << PYEOF
-import json
+# 使用 jq 更新 LLM 配置（避免 Python heredoc 注入风险）
+# shellcheck disable=SC2016
+jq --arg api_url "$API_URL" \
+   --arg api_key "$API_KEY" \
+   --arg model_id "$MODEL_ID" \
+   '.models = {
+       providers: {
+           "your-provider": {
+               baseUrl: $api_url,
+               apiKey: $api_key,
+               api: "openai",
+               models: [
+                   {
+                       id: $model_id,
+                       name: "主模型",
+                       input: ["text", "image"],
+                       contextWindow: 200000,
+                       maxTokens: 8192
+                   }
+               ]
+           }
+       }
+   }' \
+   "$CONFIG_DIR/openclaw.json" > "$CONFIG_DIR/openclaw.json.tmp" && \
+   mv "$CONFIG_DIR/openclaw.json.tmp" "$CONFIG_DIR/openclaw.json"
 
-config_file = "$CONFIG_DIR/openclaw.json"
-
-with open(config_file, 'r') as f:
-    config = json.load(f)
-
-# 更新 models 配置
-config['models'] = {
-    'providers': {
-        'your-provider': {
-            'baseUrl': '$API_URL',
-            'apiKey': '$API_KEY',
-            'api': 'openai',
-            'models': [{'id': '$MODEL_ID', 'name': '主模型', 'input': ['text', 'image'], 'contextWindow': 200000, 'maxTokens': 8192}]
-        }
-    }
-}
-
-with open(config_file, 'w') as f:
-    json.dump(config, f, indent=2)
-
-print(f"✓ LLM 配置已更新")
-PYEOF
+echo -e "  \u2713 LLM 配置已更新"
 
 # 验证修改后的配置 JSON 有效
 if ! jq empty "$CONFIG_DIR/openclaw.json" 2>/dev/null; then

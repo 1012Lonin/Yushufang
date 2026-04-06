@@ -197,8 +197,16 @@ if command -v docker &>/dev/null; then
   # 删除 Docker 数据卷（御书房 compose 卷名 + ai-court 容器名对应的卷）
   VOLUMES=$(docker volume ls --format '{{.Name}}' 2>/dev/null | grep -iE "ai-court|yushufang|danghuangshang|court-config|court-workspace|court-openviking" || true)
   if [ -n "$VOLUMES" ]; then
-    echo "$VOLUMES" | xargs docker volume rm 2>/dev/null || true
-    echo -e "  ${GREEN}✓${NC} 相关数据卷已删除"
+    echo -e "  ${YELLOW}检测到以下数据卷将被删除：${NC}"
+    echo "$VOLUMES" | sed 's/^/    /'
+    echo -ne "  确认删除这些卷？${RED}[y/N]${NC} "
+    read -r confirm
+    if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+      echo "$VOLUMES" | xargs docker volume rm 2>/dev/null || true
+      echo -e "  ${GREEN}✓${NC} 相关数据卷已删除"
+    else
+      echo -e "  ${YELLOW}跳过数据卷删除（可手动运行 docker volume rm 清理）${NC}"
+    fi
   fi
 
   echo -e "  ${YELLOW}i${NC} 如有自定义 Docker Compose 配置，请手动运行 docker compose down -v"

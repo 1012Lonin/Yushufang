@@ -33,6 +33,13 @@ ok()    { echo -e "${GREEN}[✓]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[!]${NC} $*"; }
 err()   { echo -e "${RED}[✗]${NC} $*" >&2; }
 
+# 检查目录是否为真实目录（非 symlink），防止恶意 tarball 含 symlink 指向任意路径
+_check_real_dir() {
+    local dir="$1"
+    # -L: symlink → false；-d: real dir → true
+    [[ -d "$dir" && ! -L "$dir" ]]
+}
+
 # ---------- 路径检测（备份模式下需要检测，restore 模式下可跳过）----------
 # 【修复】restore 模式下无需检测已有配置，新服务器可能为空
 detect_config_dir() {
@@ -415,11 +422,22 @@ do_restore() {
             echo "  [dry-run] 解压到临时目录"
         else
             tmpdir=$(mktemp -d)
-            tar -xzf "$PKG_PATH" -C "$tmpdir"
+            # 记录解压前的 tmpdir 绝对路径，用于后续校验
+            tmpdir_real=$(realpath "$tmpdir" 2>/dev/null || echo "$tmpdir")
+            # --no-overwrite-dir：防止覆盖已有文件
+            tar --no-overwrite-dir -xzf "$PKG_PATH" -C "$tmpdir"
             # 找到解压出的 staging 目录
             src_dir=$(find "$tmpdir" -mindepth 1 -maxdepth 1 -type d | head -1)
+            # 路径遍历安全校验：确保 src_dir 在 tmpdir 内
+            src_dir_real=$(realpath "$src_dir" 2>/dev/null || echo "$src_dir")
+            if [[ "$src_dir_real" != "$tmpdir_real"/* ]]; then
+                err "迁移包包含路径遍历攻击特征，拒绝使用"
+                rm -rf "$tmpdir"
+                exit 1
+            fi
             if [[ -z "$src_dir" ]]; then
                 err "无法解压迁移包"
+                rm -rf "$tmpdir"
                 exit 1
             fi
             echo "  已解压到：$src_dir"
@@ -434,8 +452,49 @@ do_restore() {
         return 0
     fi
 
-    log "御书房迁移恢复开始 — 配置目录：$CONFIG_DIR"
-    echo ""
+    # ---- 包完整性检查：拒绝不完整的迁移包（防止 rsync --delete 误删有效数据）----
+    if [[ ! -f "$src_dir/openclaw.json" ]]; then
+        err "迁移包不完整：缺少 openclaw.json"
+        rm -rf "$tmpdir" 2>/dev/null || true
+        exit 1
+    fi
+    if [[ ! -d "$src_dir/agents" ]]; then
+        err "迁移包不完整：缺少 agents/ 目录"
+        rm -rf "$tmpdir" 2>/dev/null || true
+        exit 1
+    fi
+    if [[ ! -d "$src_dir/configs" ]]; then
+        err "迁移包不完整：缺少 configs/ 目录"
+        rm -rf "$tmpdir" 2>/dev/null || true
+        exit 1
+    fi
+
+    # ---- 原子性保证：安装 failure trap ----
+    # 如果后续任何步骤失败，自动恢复预备份并重启服务
+    local rollback_in_progress=0
+    _do_rollback_and_restart() {
+        if [[ "$rollback_in_progress" -eq 1 ]]; then return; fi
+        rollback_in_progress=1
+        echo ""
+        err "恢复过程出错，正在回滚..."
+        # 恢复预备份
+        if [[ -d "$CONFIG_DIR/.migration-pre-restore" ]]; then
+            local latest_backup
+            latest_backup=$(ls -t "$CONFIG_DIR/.migration-pre-restore"/openclaw.json.* 2>/dev/null | head -1)
+            if [[ -n "$latest_backup" && -f "$latest_backup" ]]; then
+                cp -p "$latest_backup" "$CONFIG_DIR/openclaw.json" 2>/dev/null || true
+                echo "  已恢复原配置：$latest_backup"
+            fi
+        fi
+        # 重启服务
+        if [[ "$docker_was_running" -eq 1 ]]; then
+            (cd "$PROJECT_ROOT" && docker compose up -d 2>/dev/null || true)
+        elif command -v openclaw &>/dev/null; then
+            openclaw gateway start 2>/dev/null || true
+        fi
+        echo "  回滚完成，服务已重启"
+    }
+    trap '_do_rollback_and_restart' ERR
 
     # 读取元数据
     local meta_file="$src_dir/migration-meta.txt"
@@ -476,7 +535,9 @@ do_restore() {
         if command -v jq &>/dev/null && jq empty "$CONFIG_DIR/openclaw.json" 2>/dev/null; then
             ok "openclaw.json（JSON 格式正确）"
         else
-            warn "openclaw.json 格式可能有问题，请检查"
+            err "openclaw.json 格式无效，拒绝继续（防止用损坏配置启动服务）"
+            rm -rf "$tmpdir" 2>/dev/null || true
+            exit 1
         fi
     else
         warn "迁移包中无 openclaw.json，跳过"
@@ -499,7 +560,7 @@ do_restore() {
     # ---- 4. 恢复 agents（含 auth-profiles.json）----
     echo ""
     log "恢复 Agent 目录（含 OAuth 凭据）..."
-    if [[ -d "$src_dir/agents" ]]; then
+    if [[ -d "$src_dir/agents" ]] && _check_real_dir "$src_dir/agents"; then
         mkdir -p "$CONFIG_DIR/agents"
         if command -v rsync &>/dev/null; then
             rsync -a --delete "$src_dir/agents/" "$CONFIG_DIR/agents/"
@@ -509,6 +570,10 @@ do_restore() {
             cp -a "$src_dir/agents/." "$CONFIG_DIR/agents/"
         fi
         ok "agents/ (含 auth-profiles.json)"
+    elif [[ -L "$src_dir/agents" ]]; then
+        err "迁移包 agents/ 为 symlink，拒绝使用（路径遍历攻击）"
+        rm -rf "$tmpdir" 2>/dev/null || true
+        exit 1
     else
         warn "迁移包中无 agents/ 目录"
     fi
@@ -527,7 +592,11 @@ do_restore() {
     # ---- 6. 恢复 configs（制度）----
     echo ""
     log "恢复 configs/（制度配置）..."
-    if [[ -d "$src_dir/configs" ]]; then
+    if [[ -L "$src_dir/configs" ]]; then
+        err "迁移包 configs/ 为 symlink，拒绝使用"
+        rm -rf "$tmpdir" 2>/dev/null || true
+        exit 1
+    elif [[ -d "$src_dir/configs" ]]; then
         mkdir -p "$CONFIG_DIR/configs"
         if command -v rsync &>/dev/null; then
             rsync -a --delete "$src_dir/configs/" "$CONFIG_DIR/configs/"
@@ -541,7 +610,11 @@ do_restore() {
     # ---- 7. 恢复 clawd-hubu ----
     echo ""
     log "恢复户部数据..."
-    if [[ -d "$src_dir/clawd-hubu" ]]; then
+    if [[ -L "$src_dir/clawd-hubu" ]]; then
+        err "迁移包 clawd-hubu/ 为 symlink，拒绝使用"
+        rm -rf "$tmpdir" 2>/dev/null || true
+        exit 1
+    elif [[ -d "$src_dir/clawd-hubu" ]]; then
         mkdir -p "$HOME/clawd-hubu"
         if command -v rsync &>/dev/null; then
             rsync -a --delete "$src_dir/clawd-hubu/" "$HOME/clawd-hubu/"
@@ -557,7 +630,11 @@ do_restore() {
     # ---- 8. 恢复 clawd 工作区（--full 备份时）----
     echo ""
     log "恢复工作区..."
-    if [[ -d "$src_dir/clawd" ]]; then
+    if [[ -L "$src_dir/clawd" ]]; then
+        err "迁移包 clawd/ 为 symlink，拒绝使用"
+        rm -rf "$tmpdir" 2>/dev/null || true
+        exit 1
+    elif [[ -d "$src_dir/clawd" ]]; then
         mkdir -p "$HOME/clawd"
         if command -v rsync &>/dev/null; then
             rsync -a --delete "$src_dir/clawd/" "$HOME/clawd/"
@@ -606,6 +683,9 @@ do_restore() {
         openclaw gateway start 2>/dev/null || true
         ok "Gateway 已启动"
     fi
+
+    # 成功：移除 failure trap（trap - ERR 仅在 do_restore 作用域内生效）
+    trap - ERR
 
     echo ""
     ok "迁移恢复完成！"
