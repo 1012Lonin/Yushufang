@@ -204,7 +204,8 @@ show_help() {
 选项：
   (无)        完整流程：备份 → 安全检查 → 更新
   --backup    仅备份配置
-  --check     仅安全检查
+  --check     仅安全检查（8 项）
+  --install-hook  安装 Git Hook 保护
   --rollback  回滚到上次备份
   --help      显示帮助
 
@@ -212,6 +213,7 @@ show_help() {
   $0                    # 完整更新流程
   $0 --backup           # 手动备份
   $0 --check            # 检查配置安全性
+  $0 --install-hook     # 安装 Git Hook 保护
   $0 --rollback         # 出问题时回滚
 
 EOF
@@ -227,6 +229,9 @@ main() {
             ;;
         --check)
             safety_check
+            ;;
+        --install-hook)
+            bash "$(dirname "$0")/pre-update-check.sh" --install-hook
             ;;
         --rollback)
             rollback
