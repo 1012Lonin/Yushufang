@@ -17,7 +17,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0
 
 ### Enhanced
 
-- **scripts/pre-update-check.sh**: 完整重写为 8 项安全检查（+ allowBots/@everyone/@here 安全配置）
+- **scripts/pre-update-check.sh**: 完整重写为 10 项安全检查（+ allowBots/@everyone/@here 安全配置）
+
+---
+
+## [v1.2.1] — 全面运维脚本审计与安全修复
+
+> 2026-04-07 | 5 并行 subagent 审计 + Codex adversarial review × 3 轮
+
+### 安装脚本（full/simple-install.sh）
+- **FIX** [BLOCKER] simple-install.sh agent 列表硬编码 8 个，实际有 20 个 → 改为 `jq -r '.agents.list[].id'` 动态提取
+- **FIX** [BLOCKER] simple-install.sh Python heredoc 注入 `$API_URL/$API_KEY/$MODEL_ID` → 替换为 `jq --arg`（无 shell 插值）
+- **FIX** [BLOCKER] 两脚本均不支持 `CONFIG_DIR` 环境变量覆盖 → 已添加 `${CONFIG_DIR:-}` 模式
+- **FIX** [HIGH] `set -e` → `set -euo pipefail`（文档早就要求了）
+- **FIX** [HIGH] simple-install.sh 无 `~/.clawdbot` 检测 → 已添加双目录检测
+- **FIX** [HIGH] agent_id 模板路径遍历风险 → 添加正则校验 `^[A-Za-z0-9._-]+$`
+
+### 更新脚本（safe-update/pre-update-check/backup-all.sh）
+- **FIX** [HIGH] `safe-update.sh` 用 `CLAWD_DIR` vs 其他脚本用 `CONFIG_DIR` → 统一为 `CONFIG_DIR`
+- **FIX** [HIGH] rollback `cp -r` 遗留陈旧文件 → 新增 `_do_rollback_dir()` 用 rsync
+- **FIX** [HIGH] `backup-all.sh` 清理逻辑会误删共享目录其他来源备份 → 限制到 `memory/agents` 子目录
+- **FIX** [HIGH] UPDATE.md cron 重定向在 `sh -c` 外部 → 移入内部
+- **FIX** [MEDIUM] UPDATE.md "8 项" → "10 项"
+
+### 迁移脚本（migrate.sh 新建 17KB）
+- **NEW** [HIGH] 完整迁移脚本，支持 `--backup` / `--restore` / `--dry-run` / `--full`
+- **FIX** [HIGH] tar 路径遍历攻击（symlink → /etc）→ tar `--no-overwrite-dir` + realpath 校验 + 每步 symlink 检测
+- **FIX** [HIGH] 部分损坏包仍重启服务 → 无效 JSON 直接 `exit 1` + 包完整性强制检查
+- **FIX** [HIGH] 非事务性恢复（中途失败留半残系统）→ ERR trap 自动回滚预备份 + 重启服务
+- **FIX** [HIGH] memory-backup.sh 仅备份一个 agent OAuth 凭据 → 遍历所有 `agents/*/agent/auth-profiles.json`
+
+### 卸载脚本（uninstall.sh）
+- **FIX** [HIGH] Docker 卷名 `clawd` 通配过宽 → 改为 `yushufang|danghuangshang`
+- **FIX** [HIGH] `~/clawd-*` 删除无确认 → 加二次确认
+- **FIX** [HIGH] crontab 清理无备份且正则过宽 → 先备份 + 精确正则
+- **FIX** [MEDIUM] 双安装互相干扰 → 仅在 `~/.openclaw` 不存在时才删 `~/.clawdbot`
+- **FIX** [MEDIUM] Docker 卷删除无确认 → y/n 确认后删除
+
+### 辅助脚本统一修复
+- **FIX** `scripts/switch-regime.sh` / `init-personas.sh` / `hubu-data-collect.sh`: 双安装检测 + `set -euo pipefail`
+
+### 文档修复
+- **FIX** `UPDATE.md`: cron 重定向路径、CONFIG_DIR 替代硬编码
+- **FIX** `migration.md`: rsync 替代 cp -r 保留隐藏文件、CONFIG_DIR 变量化
+- **FIX** `README.md`: migrate.sh 文档化、Docker 部署 bind mount 说明修正
+- **NEW** `docker-compose.yml`: 默认 bind mount（与 README 一致）
 - **docs/UPDATE.md**: 新增自动定时备份、Git Hook 保护、版本管理、检查清单分层
 - **scripts/safe-update.sh**: 新增 `--install-hook` 参数，委托 pre-update-check.sh 安装 Git Hook
 
