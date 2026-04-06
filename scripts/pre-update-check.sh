@@ -6,18 +6,18 @@
 # 1. 配置完整性（JSON 格式）
 # 2. 安全配置检查（allowBots / @everyone / @here）
 # 3. 人设完整性
-# 4. API Key / Discord Token 配置
-# 5. Gateway 状态
-# 6. Git 状态（未提交变更 / 落后远程）
-# 7. 备份状态
-# 8. Git Hook 保护检查与安装
+# 4. API Key 配置
+# 5. Discord Token 配置
+# 6. Gateway 状态
+# 7. Git 状态（未提交变更 / 落后远程）
+# 8. 备份状态 & Git Hook
 #
 # 用法：
 #   bash scripts/pre-update-check.sh          # 检查
 #   bash scripts/pre-update-check.sh --install-hook  # 安装 git hook
 # ============================================
 
-set -uo pipefail  # 注意：不使用 -e，使 ((issues++)) 在 issues=0 时不导致脚本中途退出，确保完成全部 10 项检查
+set -uo pipefail  # 注意：不使用 -e，使 ((issues++)) 在 issues=0 时不导致脚本中途退出，确保完成全部 8 项检查
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"

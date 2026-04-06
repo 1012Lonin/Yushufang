@@ -23,8 +23,6 @@
 # ============================================
 
 set -euo pipefail
-
-# ---------- 颜色 ----------
 RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"
 CYAN="\033[0;36m"; BLUE="\033[0;34m"; BOLD="\033[1m"; NC="\033[0m"
 
@@ -204,8 +202,8 @@ do_backup() {
             for db in "$CONFIG_DIR/memory"/*.sqlite; do
                 [[ -f "$db" ]] || continue
                 if command -v sqlite3 &>/dev/null; then
-                    local target="'$stage_dir/memory/$(basename "$db")'"
-                    if sqlite3 "$db" ".backup $target" 2>/dev/null; then
+                    local target="$stage_dir/memory/$(basename "$db")"
+                    if sqlite3 "$db" ".backup '$target'" 2>/dev/null; then
                         : # sqlite3 .backup 成功
                     else
                         # 回退到 cp，但标记为失败
@@ -458,15 +456,17 @@ do_restore() {
         rm -rf "$tmpdir" 2>/dev/null || true
         exit 1
     fi
-    if [[ ! -d "$src_dir/agents" ]]; then
-        err "迁移包不完整：缺少 agents/ 目录"
-        rm -rf "$tmpdir" 2>/dev/null || true
-        exit 1
-    fi
-    if [[ ! -d "$src_dir/configs" ]]; then
-        err "迁移包不完整：缺少 configs/ 目录"
-        rm -rf "$tmpdir" 2>/dev/null || true
-        exit 1
+    if [[ "$detected_full_backup" == "true" ]]; then
+        if [[ ! -d "$src_dir/agents" ]]; then
+            err "迁移包不完整：--full 模式缺少 agents/ 目录"
+            rm -rf "$tmpdir" 2>/dev/null || true
+            exit 1
+        fi
+        if [[ ! -d "$src_dir/configs" ]]; then
+            err "迁移包不完整：--full 模式缺少 configs/ 目录"
+            rm -rf "$tmpdir" 2>/dev/null || true
+            exit 1
+        fi
     fi
 
     # ---- 原子性保证：安装 failure trap ----
@@ -499,8 +499,10 @@ do_restore() {
     # 读取元数据
     local meta_file="$src_dir/migration-meta.txt"
     local detected_regime="unknown"
+    local detected_full_backup="false"
     if [[ -f "$meta_file" ]]; then
         detected_regime=$(grep "^regime=" "$meta_file" 2>/dev/null | cut -d= -f2 || echo "unknown")
+        detected_full_backup=$(grep "^full_backup=" "$meta_file" 2>/dev/null | cut -d= -f2 || echo "false")
         echo "  来自服务器制度：$detected_regime"
     fi
 

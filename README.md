@@ -790,8 +790,8 @@ cp configs/ming-neige/openclaw.json ./openclaw.json
 nano ./openclaw.json  # 填入 API Keys + Discord Bot Tokens
 docker compose up -d
 
-#    如需使用 named volume（适合生产环境，配置随卷持久化，可通过 docker exec 在线编辑后生效）：
-#    1. 编辑 docker-compose.yml，将 "./openclaw.json:..." 行的注释去掉（启用 bind mount），并将 "court-config:..." 行注释掉
+#    如需切换为 named volume（适合生产环境，配置随卷持久化，可通过 docker exec 在线编辑后生效）：
+#    1. 编辑 docker-compose.yml，将第 37 行 "./openclaw.json:..." 注释掉（停用 bind mount），将第 41 行 "court-config:..." 取消注释（启用 named volume）
 #    2. 确认卷名（Compose 默认使用目录名作为项目名前缀）：
 docker compose config --volumes | grep court-config  # 查看实际卷名
 #    3. 手动复制配置到卷中（将 YOUR_PROJECT 替换为实际项目名）：

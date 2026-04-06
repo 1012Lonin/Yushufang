@@ -104,10 +104,10 @@ safety_check() {
     if [ -f "$OPENCLAW_CONFIG" ]; then
         if ! command -v jq >/dev/null 2>&1; then
             error "❌ jq 未安装，无法验证配置"
-            ((errors++))
+            errors=$((errors + 1))
         elif ! jq empty "$OPENCLAW_CONFIG" 2>/dev/null; then
             error "❌ 配置文件 JSON 格式错误，无法继续安全检查"
-            ((errors++))
+            errors=$((errors + 1))
         else
             local allow_bots
             allow_bots=$(jq -r '.channels.discord.allowBots // "not-set"' "$OPENCLAW_CONFIG" 2>/dev/null)
@@ -121,7 +121,7 @@ safety_check() {
                 ;;
             true)
                 error "❌ allowBots=true 危险！会导致机器人循环。请改为 \"mentions\""
-                ((errors++))
+                errors=$((errors + 1))
                 ;;
             not-set)
                 warn "allowBots 未配置（建议设为 mentions）"
@@ -135,7 +135,7 @@ safety_check() {
         # 检查 2: mentionPatterns 是否包含 @everyone
         if grep -q '@everyone' "$OPENCLAW_CONFIG" 2>/dev/null; then
             error "❌ 发现 @everyone 配置！这是核弹开关，必须移除"
-            ((errors++))
+            errors=$((errors + 1))
         else
             success "未发现 @everyone 配置"
         fi
@@ -143,13 +143,13 @@ safety_check() {
         # 检查 3: mentionPatterns 是否包含 @here
         if grep -q '@here' "$OPENCLAW_CONFIG" 2>/dev/null; then
             error "❌ 发现 @here 配置！必须移除"
-            ((errors++))
+            errors=$((errors + 1))
         else
             success "未发现 @here 配置"
         fi
     else
         error "❌ 未找到配置文件：$OPENCLAW_CONFIG"
-        ((errors++))
+        errors=$((errors + 1))
     fi
 
     if [ $errors -gt 0 ]; then

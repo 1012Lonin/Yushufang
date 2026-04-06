@@ -27,7 +27,7 @@ echo ""
 # 步骤 0: 克隆仓库（如果是远程执行）
 # ============================================
 
-echo -e "${BLUE}[0/6] 准备环境...${NC}"
+echo -e "${BLUE}[0/7] 准备环境...${NC}"
 
 INSTALL_DIR="$HOME/Yushufang-installer"
 
@@ -47,7 +47,7 @@ cd "$INSTALL_DIR"
 # ============================================
 
 echo ""
-echo -e "${BLUE}[1/6] 检查环境...${NC}"
+echo -e "${BLUE}[1/7] 检查环境...${NC}"
 
 if command -v openclaw &>/dev/null; then
   OPENCLAW_VERSION=$(openclaw --version 2>/dev/null || echo "unknown")
@@ -81,7 +81,7 @@ echo ""
 # 步骤 2: 选择制度
 # ============================================
 
-echo -e "${BLUE}[2/6] 选择制度...${NC}"
+echo -e "${BLUE}[2/7] 选择制度...${NC}"
 echo ""
 
 echo "  可用制度:"
@@ -240,6 +240,13 @@ if [ -d "$AGENTS_DIR" ]; then
   
   for ((i=0; i<agent_count; i++)); do
     agent_id=$(jq -r ".agents.list[$i].id" "$CONFIG_FILE")
+
+    # 安全校验：拒绝含路径遍历字符的 agent_id
+    if [[ ! "$agent_id" =~ ^[A-Za-z0-9._-]+$ ]]; then
+      echo -e "    ${RED}✗ 跳过不安全的 agent_id：$agent_id${NC}"
+      continue
+    fi
+
     persona_file="$AGENTS_DIR/${agent_id}.md"
     
     if [ -f "$persona_file" ]; then
