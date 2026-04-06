@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# safe-update.sh - 菠萝王朝安全更新脚本
+# safe-update.sh - 御书房安全更新脚本
 # 
 # 功能：
 # 1. 更新前自动备份配置和记忆
@@ -122,20 +122,33 @@ safety_check() {
 
 # 执行更新
 do_update() {
+    local project_dir
+    project_dir="$(dirname "$(dirname "$0")")"
+
     info "正在更新..."
-    
-    # 如果使用 clawdhub
-    if command -v clawdhub &> /dev/null; then
-        clawdhub sync
-        success "clawdhub sync 完成"
+
+    if [ -d "$project_dir/.git" ]; then
+        info "Git 拉取：$project_dir"
+        (cd "$project_dir" && git pull) || error "git pull 失败"
+        success "git pull 完成"
+    else
+        warn "非 git 仓库，跳过拉取"
     fi
-    
-    # 如果使用 openclaw
-    if command -v openclaw &> /dev/null; then
-        openclaw update
-        success "openclaw update 完成"
+
+    # 重新注入人设（模板 → 运行时配置）
+    if [ -f "$project_dir/scripts/init-personas.sh" ]; then
+        info "重新注入人设..."
+        (cd "$project_dir" && bash scripts/init-personas.sh) || warn "人设注入失败，请手动检查"
+        success "人设注入完成"
     fi
-    
+
+    # 重启 Gateway
+    if command -v openclaw &>/dev/null; then
+        info "重启 Gateway..."
+        openclaw gateway restart 2>/dev/null || warn "Gateway 重启失败，请手动重启"
+        success "Gateway 重启完成"
+    fi
+
     success "更新完成！"
 }
 
@@ -184,7 +197,7 @@ rollback() {
 # 显示帮助
 show_help() {
     cat << EOF
-菠萝王朝安全更新脚本
+御书房安全更新脚本
 
 用法：$0 [选项]
 

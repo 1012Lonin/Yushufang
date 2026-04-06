@@ -892,6 +892,7 @@ Yushufang/
 
 ## 运维相关
 
+- [更新指南](./docs/UPDATE.md) — 安全更新流程（备份 → git pull → 人设注入 → 重启）
 - [迁移指南](./docs/migration.md) — 服务器迁移完整操作手册（备份→传输→恢复→验证）
 - [卸载脚本](./scripts/uninstall.sh) — 完整卸载御书房（Docker / 非 Docker）
 

@@ -18,8 +18,9 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DANGHUANGSHANG_ROOT="$(dirname "$SCRIPT_DIR")"
-BACKUP_DIR="$DANGHUANGSHANG_ROOT/backups"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+# 备份存放在 ~/.openclaw/backups/（配置目录），而非项目目录
+BACKUP_DIR="${BACKUP_DIR:-$HOME/.openclaw/backups}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # 配置目录（自动检测）
