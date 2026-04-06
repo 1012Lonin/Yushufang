@@ -53,7 +53,7 @@
 
 ```bash
 # 新版本安装脚本会自动生成兼容配置
-bash <(curl -fsSL https://raw.githubusercontent.com/wanikua/danghuangshang/main/scripts/full-install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/scripts/full-install.sh)
 ```
 
 ### 方式二：手动更新现有配置

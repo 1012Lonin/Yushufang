@@ -34,11 +34,11 @@ services:
     
     # 数据持久化
     volumes:
-      - court-config:/home/court/.openclaw
+      - ./openclaw.json:/home/court/.openclaw/openclaw.json:ro
       - court-workspace:/home/court/clawd
       - court-openviking:/home/court/.openviking
-      # 可选：挂载自定义配置
-      # - ./openclaw.json:/home/court/.openclaw/openclaw.json:ro
+      # 可选：切换为 named volume（适合生产环境，首次需手动 cp 配置到卷）
+      # - court-config:/home/court/.openclaw
       # 可选：挂载自定义 skills
       # - ./skills:/home/court/clawd/skills:ro
     

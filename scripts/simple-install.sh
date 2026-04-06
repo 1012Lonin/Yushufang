@@ -4,7 +4,7 @@
 # 用法：bash <(curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/scripts/simple-install.sh)
 # ============================================
 
-set -e
+set -euo pipefail
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -61,7 +61,30 @@ esac
 
 # 步骤 4: 安装配置
 echo -e "${BLUE}[4/4] 安装配置...${NC}"
-CONFIG_DIR="$HOME/.openclaw"
+
+# 支持 CONFIG_DIR 环境变量覆盖（Docker 等非标准路径）
+# 同时检测双安装并报错，避免误覆盖
+if [ -z "${CONFIG_DIR:-}" ]; then
+  CLAWDBOT_CONFIG="$HOME/.clawdbot/openclaw.json"
+  OPENCLAW_CONFIG="$HOME/.openclaw/openclaw.json"
+  if [ -f "$CLAWDBOT_CONFIG" ] && [ -f "$OPENCLAW_CONFIG" ]; then
+    echo -e "${RED}✗ 错误：~/.openclaw 和 ~/.clawdbot 同时存在${NC}" >&2
+    echo "  请明确指定：CONFIG_DIR=~/.openclaw 或 CONFIG_DIR=~/.clawdbot bash $0" >&2
+    exit 1
+  elif [ -f "$CLAWDBOT_CONFIG" ]; then
+    CONFIG_DIR="$HOME/.clawdbot"
+    echo -e "  ${YELLOW}i${NC} 使用 .clawdbot 配置目录"
+  elif [ -f "$OPENCLAW_CONFIG" ]; then
+    CONFIG_DIR="$HOME/.openclaw"
+    echo -e "  ${YELLOW}i${NC} 使用 .openclaw 配置目录"
+  else
+    CONFIG_DIR="$HOME/.openclaw"
+    echo -e "  ${YELLOW}i${NC} 将创建新配置"
+  fi
+else
+  echo -e "  ${YELLOW}i${NC} 使用 CONFIG_DIR: $CONFIG_DIR"
+fi
+
 mkdir -p "$CONFIG_DIR"
 
 # 备份现有配置（如果有）
@@ -71,27 +94,48 @@ if [ -f "$CONFIG_DIR/openclaw.json" ]; then
   echo -e "  ${YELLOW}✓${NC} 已备份现有配置：$BACKUP_FILE"
 fi
 
-# 下载 SOUL.md
-echo -e "  ${CYAN}下载 Agent 人设...${NC}"
-mkdir -p "$CONFIG_DIR/agents"
-for agent in silijian neige duchayuan bingbu hubu libu gongbu xingbu; do
-  curl -fsSL "https://raw.githubusercontent.com/1012Lonin/Yushufang/main/configs/$REGIME/agents/$agent.md" -o "$CONFIG_DIR/agents/$agent.md" 2>/dev/null || true
-done
-echo -e "  ${GREEN}✓${NC} Agent 人设已下载"
-
-# 下载配置
+# 下载配置（先下载以获取 agent 列表）
 TEMPLATE_URL="https://raw.githubusercontent.com/1012Lonin/Yushufang/main/configs/$REGIME/openclaw.json"
+TEMP_CONFIG="${CONFIG_DIR}/openclaw.json.download.$$"
 echo -e "  ${CYAN}下载配置模板...${NC}"
-if curl -fsSL "$TEMPLATE_URL" -o "$CONFIG_DIR/openclaw.json" 2>/dev/null; then
-  echo -e "${GREEN}✓${NC} 配置已安装：$CONFIG_DIR/openclaw.json"
-else
-  echo -e "${RED}✗ 下载失败${NC}"
-  if [ -f "$BACKUP_FILE" ]; then
+if ! curl -fsSL "$TEMPLATE_URL" -o "$TEMP_CONFIG" 2>/dev/null; then
+  echo -e "  ${RED}✗ 下载配置模板失败${NC}"
+  rm -f "$TEMP_CONFIG"
+  if [ -f "${BACKUP_FILE:-}" ]; then
     cp "$BACKUP_FILE" "$CONFIG_DIR/openclaw.json"
-    echo -e "${YELLOW}✓${NC} 已恢复原配置"
+    echo -e "  ${YELLOW}✓${NC} 已恢复原配置"
   fi
   exit 1
 fi
+
+# 验证模板 JSON 有效
+if ! jq empty "$TEMP_CONFIG" 2>/dev/null; then
+  echo -e "  ${RED}✗ 配置模板无效${NC}"
+  rm -f "$TEMP_CONFIG"
+  exit 1
+fi
+
+# 从模板动态提取 agent 列表（修复：不再硬编码 8 个）
+AGENT_LIST=$(jq -r '.agents.list[].id' "$TEMP_CONFIG" 2>/dev/null)
+if [ -z "$AGENT_LIST" ]; then
+  echo -e "  ${RED}✗ 无法从模板提取 agent 列表${NC}"
+  rm -f "$TEMP_CONFIG"
+  exit 1
+fi
+AGENT_COUNT=$(echo "$AGENT_LIST" | wc -l | tr -d ' ')
+echo -e "  ${YELLOW}i${NC} 检测到 $AGENT_COUNT 个 Agent"
+
+# 下载人设文件
+echo -e "  ${CYAN}下载 Agent 人设...${NC}"
+mkdir -p "$CONFIG_DIR/agents"
+while IFS= read -r agent_id; do
+  curl -fsSL "https://raw.githubusercontent.com/1012Lonin/Yushufang/main/configs/$REGIME/agents/${agent_id}.md" \
+    -o "$CONFIG_DIR/agents/${agent_id}.md" 2>/dev/null && echo -e "    ${GREEN}✓${NC} $agent_id" || echo -e "    ${YELLOW}⚠${NC} $agent_id (无独立人设)"
+done <<< "$AGENT_LIST"
+echo -e "  ${GREEN}✓${NC} Agent 人设下载完成"
+
+# 移动模板到目标位置
+mv "$TEMP_CONFIG" "$CONFIG_DIR/openclaw.json"
 
 # 使用 Python 更新 LLM 配置
 python3 << PYEOF
@@ -119,6 +163,17 @@ with open(config_file, 'w') as f:
 
 print(f"✓ LLM 配置已更新")
 PYEOF
+
+# 验证修改后的配置 JSON 有效
+if ! jq empty "$CONFIG_DIR/openclaw.json" 2>/dev/null; then
+  echo -e "  ${RED}✗ 配置验证失败（JSON 格式错误）${NC}"
+  if [ -n "${BACKUP_FILE:-}" ] && [ -f "$BACKUP_FILE" ]; then
+    cp "$BACKUP_FILE" "$CONFIG_DIR/openclaw.json"
+    echo -e "  ${YELLOW}✓${NC} 已恢复原配置"
+  fi
+  exit 1
+fi
+echo -e "  ${GREEN}✓${NC} 配置已安装：$CONFIG_DIR/openclaw.json"
 
 echo ""
 echo -e "${GREEN}╔══════════════════════════╗${NC}"

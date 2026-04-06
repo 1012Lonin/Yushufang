@@ -49,6 +49,7 @@ bash scripts/full-install.sh
 - [模型配置指南](#模型配置指南) — Provider 配置与切换
 - [费用优化建议](#费用优化建议)
 - [部署方案](#部署方案)
+- [迁移](#迁移)
 - [项目结构](#项目结构)
 - [与上游差异](#与上游-danghuangshang-的差异)
 
@@ -774,14 +775,27 @@ flowchart TD
 
 ## 部署方案
 
+> 御书房支持双配置目录：`~/.openclaw`（默认）和 `~/.clawdbot`。  
+> 安装脚本会自动检测已有配置位置。如需手动指定：`CONFIG_DIR=~/.clawdbot bash scripts/full-install.sh`
+
 ### Docker Compose
 
 ```bash
-# 1. 复制配置
-cp configs/ming-neige/openclaw.json ~/.openclaw/openclaw.json
-# 2. 编辑 openclaw.json 填入 API Keys + Discord Bot Tokens
-# 3. 启动
+# 1. 克隆仓库
+git clone https://github.com/1012Lonin/Yushufang.git ~/yushufang
+cd ~/yushufang
+
+# 2. 复制并编辑配置（默认 bind mount：容器内以只读方式挂载 ./openclaw.json）
+cp configs/ming-neige/openclaw.json ./openclaw.json
+nano ./openclaw.json  # 填入 API Keys + Discord Bot Tokens
 docker compose up -d
+
+#    如需使用 named volume（适合生产环境，配置随卷持久化，可通过 docker exec 在线编辑后生效）：
+#    1. 编辑 docker-compose.yml，将 "./openclaw.json:..." 行的注释去掉（启用 bind mount），并将 "court-config:..." 行注释掉
+#    2. 确认卷名（Compose 默认使用目录名作为项目名前缀）：
+docker compose config --volumes | grep court-config  # 查看实际卷名
+#    3. 手动复制配置到卷中（将 YOUR_PROJECT 替换为实际项目名）：
+docker run --rm -v YOUR_PROJECT_court-config:/data -v $(pwd):/src alpine cp /src/openclaw.json /data/
 ```
 
 ### 非 Docker 本地部署
@@ -790,10 +804,35 @@ docker compose up -d
 npm install -g openclaw
 git clone https://github.com/1012Lonin/Yushufang.git
 cd Yushufang
-cp configs/ming-neige/openclaw.json ~/.openclaw/openclaw.json
+# 自动检测 ~/.openclaw 或 ~/.clawdbot，完成所有配置
+bash scripts/full-install.sh
+# 或手动复制配置：
+# cp configs/ming-neige/openclaw.json ~/.openclaw/openclaw.json
 # 编辑配置文件
 openclaw gateway start
 ```
+
+### 迁移
+
+如需将御书房从旧服务器迁移到新服务器，使用 `scripts/migrate.sh`：
+
+```bash
+# 源服务器：生成迁移包
+bash scripts/migrate.sh --backup               # 标准迁移包
+bash scripts/migrate.sh --backup --full       # 含工作区完整备份
+bash scripts/migrate.sh --backup --dry-run    # 预览备份内容
+
+# 将生成的迁移包传输到新服务器
+scp ~/yushufang-migration/yushufang-migration-*.tar.gz user@newserver:~/
+
+# 新服务器：恢复（支持 staging 目录或 .tar.gz 包）
+bash scripts/migrate.sh --restore yushufang-migration-YYYYMMDD_HHMMSS.tar.gz
+# 或直接解压后恢复：
+# tar -xzf yushufang-migration-*.tar.gz
+# bash scripts/migrate.sh --restore staging.YYYYMMDD_HHMMSS
+```
+
+> 详细说明见 [迁移指南](./docs/migration.md)。
 
 ### 个人配置仓库推荐结构
 
@@ -855,9 +894,14 @@ Yushufang/
 │   ├── modern-ceo/              # 现代企业制（上游保留）
 │   └── feishu*/                 # 飞书适配配置（上游保留）
 ├── scripts/
-│   ├── full-install.sh          # 一键完整安装
+│   ├── full-install.sh          # 一键完整安装（交互式，支持 clone 执行）
+│   ├── simple-install.sh        # 简化安装（远程 curl 执行，快速配置）
+│   ├── safe-update.sh           # 安全更新（备份 + 安全检查 + git pull + 回滚）
+│   ├── pre-update-check.sh      # 更新前安全检查
+│   ├── migrate.sh               # 服务器迁移（备份 → 传输 → 恢复）
+│   ├── uninstall.sh             # 完整卸载（配置 + 工作区 + Docker 清理）
 │   ├── hubu-data-collect.sh     # 户部数据收集（零 LLM）
-│   └── ...                      # 安装/诊断/备份脚本
+│   └── ...                      # 其他诊断/备份/制度切换脚本
 ├── docs/                        # 60+ 文档（安装、排障、部署、安全）
 ├── docker/                      # Docker 入口/初始化脚本
 ├── Dockerfile

@@ -8,9 +8,23 @@
 #   bash switch-regime.sh modern-ceo   # 直接切换到现代企业制
 # ============================================
 
-set -e
+set -euo pipefail
 
-CONFIG_DIR="$HOME/.openclaw"
+# 配置目录：优先环境变量，否则自动检测 ~/.openclaw 和 ~/.clawdbot，双安装时报错
+if [ -n "${CONFIG_DIR:-}" ]; then
+  : # operator override
+elif [ -f "$HOME/.openclaw/openclaw.json" ] && [ -f "$HOME/.clawdbot/openclaw.json" ]; then
+  echo -e "${RED}✗ 错误：~/.openclaw 和 ~/.clawdbot 同时存在${NC}" >&2
+  echo "  请明确指定：CONFIG_DIR=~/.openclaw 或 CONFIG_DIR=~/.clawdbot bash $0" >&2
+  exit 1
+elif [ -f "$HOME/.openclaw/openclaw.json" ]; then
+  CONFIG_DIR="$HOME/.openclaw"
+elif [ -f "$HOME/.clawdbot/openclaw.json" ]; then
+  CONFIG_DIR="$HOME/.clawdbot"
+else
+  echo -e "${RED}✗ 未找到配置目录（~/.openclaw 或 ~/.clawdbot）${NC}" >&2
+  exit 1
+fi
 CONFIG_FILE="$CONFIG_DIR/openclaw.json"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

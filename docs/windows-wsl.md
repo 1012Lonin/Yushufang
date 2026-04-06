@@ -4,21 +4,29 @@
 
 ---
 
-## 🚀 方式一：原生 Windows（推荐新手）
+## 🚀 方式一：WSL2 + Linux Shell（御书房当前支持的安装路径）
 
-**以管理员身份打开 PowerShell**，运行：
+> 御书房当前仅提供 Linux/macOS 安装脚本。请使用 WSL2 方式安装（与生产服务器环境一致）。
+
+打开 **PowerShell（管理员）**，运行：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/wanikua/danghuangshang/main/install.ps1')
+wsl --install
 ```
 
-脚本会自动：
-- ✅ 安装 Node.js 22 LTS
-- ✅ 安装 OpenClaw CLI
-- ✅ 创建工作区目录 (`~\clawd`)
-- ✅ 下载配置模板和快速开始指南
+安装完成后重启，打开 **Ubuntu** 应用，依次执行：
 
-安装完成后，按照生成的 `WINDOWS-QUICKSTART.md` 操作即可。
+```bash
+# 更新系统
+sudo apt update && sudo apt upgrade -y
+
+# 安装 Node.js 22+
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# 安装御书房（一键安装）
+bash <(curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/scripts/full-install.sh)
+```
 
 ---
 
@@ -68,10 +76,10 @@ sudo npm install -g openclaw@latest
 openclaw --version
 ```
 
-### 6. 一键部署 AI 朝廷
+### 6. 一键部署御书房
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/wanikua/danghuangshang/main/install-lite.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/scripts/full-install.sh)
 ```
 
 然后按提示填入 LLM API Key 和 Discord Bot Token 即可。

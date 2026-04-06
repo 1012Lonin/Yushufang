@@ -73,7 +73,7 @@ echo -e "  ${GREEN}✓${NC} 项目依赖已安装"
 ### 一键安装（推荐）
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/wanikua/danghuangshang/main/scripts/full-install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/scripts/full-install.sh)
 ```
 
 **预期输出**：

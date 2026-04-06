@@ -6,7 +6,7 @@
 #   bash <(curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/scripts/full-install.sh)
 # ============================================
 
-set -e
+set -euo pipefail
 
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -165,24 +165,29 @@ echo ""
 
 echo -e "${BLUE}[3/7] 配置处理...${NC}"
 
-CONFIG_DIR="$HOME/.openclaw"
-CLAWDBOT_CONFIG="$HOME/.clawdbot/openclaw.json"
-CONFIG_FILE="$CONFIG_DIR/openclaw.json"
-
-# 检测配置目录
-if [ -f "$CLAWDBOT_CONFIG" ] && [ ! -f "$CONFIG_FILE" ]; then
-  CONFIG_DIR="$HOME/.clawdbot"
-  CONFIG_FILE="$CLAWDBOT_CONFIG"
-  echo -e "  ${YELLOW}i${NC} 使用 .clawdbot 配置目录"
-elif [ -f "$CONFIG_FILE" ]; then
-  echo -e "  ${YELLOW}i${NC} 使用 .openclaw 配置目录"
-elif [ -f "$CLAWDBOT_CONFIG" ]; then
-  CONFIG_DIR="$HOME/.clawdbot"
-  CONFIG_FILE="$CLAWDBOT_CONFIG"
-  echo -e "  ${YELLOW}i${NC} 使用 .clawdbot 配置目录"
+# 支持 CONFIG_DIR 环境变量覆盖（用于 Docker 等非标准路径）
+# 仅在未设置环境变量时进行自动检测
+if [ -z "${CONFIG_DIR:-}" ]; then
+  CLAWDBOT_CONFIG="$HOME/.clawdbot/openclaw.json"
+  OPENCLAW_CONFIG="$HOME/.openclaw/openclaw.json"
+  if [ -f "$CLAWDBOT_CONFIG" ] && [ -f "$OPENCLAW_CONFIG" ]; then
+    echo -e "${RED}✗ 错误：~/.openclaw 和 ~/.clawdbot 同时存在${NC}" >&2
+    echo "  请明确指定：CONFIG_DIR=~/.openclaw 或 CONFIG_DIR=~/.clawdbot bash $0" >&2
+    exit 1
+  elif [ -f "$CLAWDBOT_CONFIG" ]; then
+    CONFIG_DIR="$HOME/.clawdbot"
+    echo -e "  ${YELLOW}i${NC} 使用 .clawdbot 配置目录"
+  elif [ -f "$OPENCLAW_CONFIG" ]; then
+    CONFIG_DIR="$HOME/.openclaw"
+    echo -e "  ${YELLOW}i${NC} 使用 .openclaw 配置目录"
+  else
+    CONFIG_DIR="$HOME/.openclaw"
+    echo -e "  ${YELLOW}i${NC} 将创建新配置"
+  fi
 else
-  echo -e "  ${YELLOW}i${NC} 将创建新配置"
+  echo -e "  ${YELLOW}i${NC} 使用 CONFIG_DIR: $CONFIG_DIR"
 fi
+CONFIG_FILE="$CONFIG_DIR/openclaw.json"
 
 if [ -f "$CONFIG_FILE" ]; then
   BACKUP_FILE="${CONFIG_FILE}.$(date +%Y%m%d_%H%M%S).bak"

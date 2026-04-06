@@ -204,10 +204,10 @@ else
     warn "工作区记忆不存在: $WORKSPACE/memory"
 fi
 
-# 3) 备份配置
+# 3) 备份配置（含所有 Agent 的 auth-profiles.json）
 qlog "备份配置文件..."
 mkdir -p "$STAGING/config"
-for cfg in "$OPENCLAW_HOME/$CLI_CONFIG_NAME" "$OPENCLAW_HOME/agents/silijian/agent/auth-profiles.json"; do
+for cfg in "$OPENCLAW_HOME/$CLI_CONFIG_NAME"; do
     if [[ -f "$cfg" ]]; then
         if [[ "$DRY_RUN" == "true" ]]; then
             qlog "  [dry-run] 会备份 $(basename "$cfg")"
@@ -216,6 +216,20 @@ for cfg in "$OPENCLAW_HOME/$CLI_CONFIG_NAME" "$OPENCLAW_HOME/agents/silijian/age
         fi
     fi
 done
+
+# 备份所有 agents/*/agent/auth-profiles.json（保留目录结构）
+if [[ -d "$OPENCLAW_HOME/agents" ]]; then
+    mkdir -p "$STAGING/agents"
+    for authfile in "$OPENCLAW_HOME/agents"/*/agent/auth-profiles.json; do
+        [[ -f "$authfile" ]] || continue
+        agent_name=$(basename "$(dirname "$(dirname "$authfile")")")
+        mkdir -p "$STAGING/agents/$agent_name/agent"
+        cp "$authfile" "$STAGING/agents/$agent_name/agent/"
+        if [[ "$DRY_RUN" != "true" ]]; then
+            qlog "  备份 $agent_name/auth-profiles.json"
+        fi
+    done
+fi
 qok "配置文件已备份"
 
 # 4) 写入元数据

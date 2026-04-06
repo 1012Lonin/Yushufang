@@ -17,7 +17,7 @@
 #   bash scripts/pre-update-check.sh --install-hook  # 安装 git hook
 # ============================================
 
-set -uo pipefail
+set -uo pipefail  # 注意：不使用 -e，使 ((issues++)) 在 issues=0 时不导致脚本中途退出，确保完成全部 10 项检查
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"

@@ -28,7 +28,7 @@ openclaw status
 | 脚本 | 用途 |
 |------|------|
 | `scripts/safe-update.sh` | 一键更新，支持 `--backup` / `--check` / `--rollback`（`--check` 调用安全检查：allowBots/@everyone/@here） |
-| `scripts/pre-update-check.sh` | 更新前安全检查（8 项），支持 `--install-hook` 安装 Git Hook |
+| `scripts/pre-update-check.sh` | 更新前安全检查（10 项），支持 `--install-hook` 安装 Git Hook |
 | `scripts/backup-all.sh` | 备份到 `$CONFIG_DIR/backups/`（自动检测 ~/.openclaw 或 ~/.clawdbot），支持 `--full` |
 | `scripts/init-personas.sh` | 将 `configs/*/agents/*.md` 注入运行时配置 |
 
@@ -65,12 +65,12 @@ $BACKUP_DIR/                  # 自定义（环境变量覆盖）
 
 ```bash
 crontab -e
-# 添加以下两行：
-0 3 * * *  BACKUP_DIR=~/.openclaw/backups bash $HOME/Yushufang/scripts/backup-all.sh >> $HOME/.openclaw/backups/backup.log 2>&1
-0 3 * * 0  BACKUP_DIR=~/.openclaw/backups bash $HOME/Yushufang/scripts/backup-all.sh --full >> $HOME/.openclaw/backups/backup.log 2>&1
+# 添加以下两行（mkdir -p 确保首次运行时自动创建备份目录）：
+0 3 * * * sh -c 'mkdir -p ~/.openclaw/backups && CONFIG_DIR=~/.openclaw BACKUP_DIR=~/.openclaw/backups bash $HOME/Yushufang/scripts/backup-all.sh >> ~/.openclaw/backups/backup.log 2>&1'
+0 3 * * 0 sh -c 'mkdir -p ~/.openclaw/backups && CONFIG_DIR=~/.openclaw BACKUP_DIR=~/.openclaw/backups bash $HOME/Yushufang/scripts/backup-all.sh --full >> ~/.openclaw/backups/backup.log 2>&1'
 
-# ~/.clawdbot 安装时使用：
-# BACKUP_DIR=~/.clawdbot/backups bash $HOME/Yushufang/scripts/backup-all.sh >> $HOME/.clawdbot/backups/backup.log 2>&1
+# ~/.clawdbot 安装时使用（CONFIG_DIR 指定备份源，BACKUP_DIR 指定备份日志位置）：
+0 3 * * * sh -c 'mkdir -p ~/.clawdbot/backups && CONFIG_DIR=~/.clawdbot BACKUP_DIR=~/.clawdbot/backups bash $HOME/Yushufang/scripts/backup-all.sh >> ~/.clawdbot/backups/backup.log 2>&1'
 ```
 
 > 查看备份日志：`tail -20 ~/.openclaw/backups/backup.log`
@@ -138,14 +138,17 @@ bash scripts/safe-update.sh --rollback
 ### 方式二：手动恢复
 
 ```bash
-# 查看可用备份（按时间倒序，~/.clawdbot 时替换为 ~/.clawdbot）
-ls -lt ~/.openclaw/backups/configs/
+# CONFIG_DIR 环境变量指向实际安装目录（~/.openclaw 或 ~/.clawdbot 或自定义）
+CONFIG_DIR="${CONFIG_DIR:-$HOME/.openclaw}"
+
+# 查看可用备份（按时间倒序）
+ls -lt "$CONFIG_DIR/backups/configs/"
 
 # 恢复配置（YYY... 为时间戳后缀）
-cp ~/.openclaw/backups/configs/openclaw.json.YYYYMMDD_HHMMSS ~/.openclaw/openclaw.json
+cp "$CONFIG_DIR/backups/configs/openclaw.json.YYYYMMDD_HHMMSS" "$CONFIG_DIR/openclaw.json"
 
 # 验证格式
-jq empty ~/.openclaw/openclaw.json && echo "OK"
+jq empty "$CONFIG_DIR/openclaw.json" && echo "OK"
 
 # 重启
 openclaw gateway restart

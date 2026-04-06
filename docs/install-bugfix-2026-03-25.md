@@ -1,8 +1,11 @@
 # 🔧 安装脚本关键 Bug 修复
 
-**日期**: 2026-03-25  
-**严重性**: 🔴 高（影响 30%+ 新用户）  
-**修复提交**: [待填写]
+**日期**: 2026-03-25
+**严重性**: 🔴 高（影响 30%+ 新用户）
+**修复状态**: ✅ 已修复（当前仓库使用 `scripts/simple-install.sh` 和 `scripts/full-install.sh`）
+
+> **历史文档**  
+> 本文档记录 2026-03-25 的安装脚本修复。当前御书房的安装入口为 `scripts/full-install.sh` 和 `scripts/simple-install.sh`，相关问题已在这些脚本中修复。
 
 ---
 
@@ -21,7 +24,7 @@
 
 ### 问题
 
-**位置**: `install-lite.sh` 第 97-135 行
+**位置**: `simple-install.sh` 第 97-135 行（历史版本）
 
 **问题代码** (修复前):
 ```bash
@@ -59,7 +62,7 @@ ls -la ~/clawd/SOUL.md
 
 ### 问题
 
-**位置**: `install-lite.sh` 第 86-87 行
+**位置**: `simple-install.sh` 第 86-87 行（历史版本）
 
 **问题代码** (修复前):
 ```bash
@@ -92,7 +95,7 @@ CONFIG_DIR="${CONFIG_DIR:-$HOME/.openclaw}"
 **验证**:
 ```bash
 # 测试 HOME 未定义的情况
-unset HOME && bash install-lite.sh
+unset HOME && bash scripts/simple-install.sh
 # 应该能正常获取 HOME=/home/username
 ```
 
@@ -102,7 +105,7 @@ unset HOME && bash install-lite.sh
 
 ### 问题
 
-**位置**: `install-lite.sh` 第 89-91 行
+**位置**: `simple-install.sh` 第 89-91 行（历史版本）
 
 **问题代码** (修复前):
 ```bash
@@ -149,7 +152,7 @@ cd "$WORKSPACE" || {
 
 ### 问题
 
-**位置**: `install-lite.sh` 第 1 行
+**位置**: `simple-install.sh` 第 1 行（历史版本）
 
 **问题**: 缺少严格模式
 
@@ -220,6 +223,8 @@ set -euo pipefail
 - #106 - windows 安装报错
 - #118 - full-install 模板错误（已修复）
 - #113 - 模板路径错误（已修复）
+
+> 注：install-lite.sh 相关问题已在新版 simple-install.sh 中修复
 
 ---
 

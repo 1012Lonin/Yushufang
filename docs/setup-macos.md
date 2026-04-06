@@ -9,7 +9,7 @@
 ## 一键安装
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/wanikua/danghuangshang/main/install-mac.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/install-mac.sh)
 ```
 
 自动通过 Homebrew 安装所有依赖。

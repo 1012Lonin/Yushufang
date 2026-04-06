@@ -391,7 +391,7 @@ bash scripts/test-gui.sh
 rm -rf ~/.openclaw
 
 # 2. 全新安装
-bash install-lite.sh
+bash scripts/simple-install.sh
 
 # 3. 验证功能
 openclaw --version

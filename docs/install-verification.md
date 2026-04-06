@@ -53,9 +53,9 @@ cat ~/.openclaw/openclaw.json | jq '.agents.list[] | {id: .id, name: .name, hasI
 | 脚本 | 适用场景 | 人设注入 | 推荐度 |
 |------|---------|---------|--------|
 | **scripts/full-install.sh** | 首次安装（完整） | ✅ 包含 | ⭐⭐⭐⭐⭐ |
-| **install-lite.sh** | 已有 OpenClaw | ✅ 包含 | ⭐⭐⭐⭐ |
+| **scripts/simple-install.sh** | 已有 OpenClaw | ✅ 包含 | ⭐⭐⭐⭐ |
 | **install-mac.sh** | macOS 专用 | ✅ 包含 | ⭐⭐⭐⭐ |
-| **install.ps1** | Windows 专用 | ✅ 包含 | ⭐⭐⭐⭐ |
+| ~~install.ps1~~ | Windows（原 upstream） | — | ❌ 不可用 |
 
 ---
 
@@ -78,13 +78,13 @@ cat ~/.openclaw/openclaw.json | jq '.agents.list[] | {id: .id, name: .name, hasI
 cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.bak
 
 # 重新运行安装脚本（会跳过已存在的步骤）
-bash install-lite.sh
+bash scripts/simple-install.sh
 ```
 
 #### 方案 2: 手动注入人设
 
 ```bash
-cd /path/to/danghuangshang
+cd /path/to/Yushufang
 CONFIG_FILE=~/.openclaw/openclaw.json
 AGENTS_DIR=configs/ming-neige/agents
 

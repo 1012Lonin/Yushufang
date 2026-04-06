@@ -8,7 +8,19 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA_DIR="${HUBU_DATA_DIR:-$HOME/clawd-hubu/data}"
-STATE_DIR="${OPENCLAW_STATE_DIR:-$HOME/.openclaw}"
+# 配置目录：优先环境变量，否则自动检测 ~/.openclaw 和 ~/.clawdbot，双安装时报错
+if [ -n "${OPENCLAW_STATE_DIR:-}" ]; then
+  STATE_DIR="${OPENCLAW_STATE_DIR}"
+elif [ -f "$HOME/.openclaw/openclaw.json" ] && [ -f "$HOME/.clawdbot/openclaw.json" ]; then
+  echo "错误：~/.openclaw 和 ~/.clawdbot 同时存在。请明确指定 OPENCLAW_STATE_DIR" >&2
+  exit 1
+elif [ -f "$HOME/.openclaw/openclaw.json" ]; then
+  STATE_DIR="$HOME/.openclaw"
+elif [ -f "$HOME/.clawdbot/openclaw.json" ]; then
+  STATE_DIR="$HOME/.clawdbot"
+else
+  STATE_DIR="$HOME/.openclaw"
+fi
 GUI_URL="${HUBU_GUI_URL:-http://localhost:18795}"
 DISCORD_CHANNEL="${HUBU_DISCORD_CHANNEL:-YOUR_CHANNEL_ID}"
 DISCORD_ACCOUNT="${HUBU_DISCORD_ACCOUNT:-silijian}"

@@ -200,10 +200,15 @@ echo -e "${CYAN}清理旧备份...${NC}"
 if [ "$DRY_RUN" = false ]; then
   # 保留最近 30 天的配置备份
   find "$BACKUP_DIR/configs" -name "*.json.*" -mtime +30 -delete 2>/dev/null || true
-  
-  # 保留最近 7 天的完整备份
-  find "$BACKUP_DIR" -name "*.tar.gz" -mtime +7 -delete 2>/dev/null || true
-  
+
+  # 保留最近 30 天的备份清单
+  find "$BACKUP_DIR" -maxdepth 1 -name "backup-manifest.*.json" -mtime +30 -delete 2>/dev/null || true
+
+  # 保留最近 7 天的完整打包（tar.gz 文件实际位于 $BACKUP_DIR/ 根目录）
+  find "$BACKUP_DIR" -maxdepth 1 -name "memory.*.tar.gz" -mtime +7 -delete 2>/dev/null || true
+  find "$BACKUP_DIR" -maxdepth 1 -name "agents.*.tar.gz" -mtime +7 -delete 2>/dev/null || true
+  find "$BACKUP_DIR" -maxdepth 1 -name "credentials.*.tar.gz" -mtime +7 -delete 2>/dev/null || true
+
   echo -e "  ${GREEN}✓${NC} 已清理过期备份"
 else
   echo -e "  ${BLUE}◐${NC} 将清理 30 天前的配置备份和 7 天前的完整备份"
@@ -270,8 +275,8 @@ echo ""
 if [ "$DRY_RUN" = false ] && [ "$backed_up" -gt 0 ]; then
   echo -e "${YELLOW}提示：${NC}"
   echo "  - 查看备份：ls -la $BACKUP_DIR"
-  echo "  - 恢复配置：cp $BACKUP_DIR/configs/openclaw.json.* ~/.openclaw/openclaw.json"
-  echo "  - 恢复记忆：tar -xzf $BACKUP_DIR/memory.*.tar.gz -C ~/.openclaw/"
+  echo "  - 恢复配置：cp $BACKUP_DIR/configs/openclaw.json.* \$CONFIG_DIR/openclaw.json"
+  echo "  - 恢复记忆：tar -xzf \$BACKUP_DIR/memory.*.tar.gz -C \$CONFIG_DIR/"
   echo ""
 fi
 

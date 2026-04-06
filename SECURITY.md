@@ -35,9 +35,9 @@
 1. **验证安装脚本**
    ```bash
    # 下载后先检查脚本内容
-   curl -fsSL https://raw.githubusercontent.com/wanikua/danghuangshang/main/install-lite.sh -o install-lite.sh
-   cat install-lite.sh  # 检查后再运行
-   bash install-lite.sh
+   curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/scripts/simple-install.sh -o simple-install.sh
+   cat simple-install.sh  # 检查后再运行
+   bash simple-install.sh
    ```
 
 2. **使用官方源**

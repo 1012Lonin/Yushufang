@@ -9,7 +9,7 @@
 ## 1. 安装
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/wanikua/danghuangshang/main/install-lite.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/scripts/simple-install.sh)
 # 选择：纯 WebUI 模式
 ```
 

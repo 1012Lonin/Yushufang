@@ -2,6 +2,15 @@
 
 本文档说明如何将御书房从一台服务器完整迁移到另一台服务器。
 
+> **推荐方式**：使用自动化迁移脚本 `scripts/migrate.sh`，自动处理配置目录检测、OAuth 凭据备份、隐藏文件保留等细节。
+> ```bash
+> # 源服务器：生成迁移包
+> bash scripts/migrate.sh --backup
+> # 新服务器：从迁移包恢复
+> bash scripts/migrate.sh --restore yushufang-migration-TIMESTAMP.tar.gz
+> ```
+> 本文档其余部分说明手动迁移步骤，供无脚本环境参考。
+
 ---
 
 ## 迁移前准备
@@ -14,6 +23,7 @@
 | npm | 随 Node.js 附送 | - |
 | Docker | Latest | 可选，用于 Docker 部署 |
 | jq / curl / git | 最新版 | 辅助工具 |
+| rsync | 最新版 | 推荐，用于保留隐藏文件 |
 
 ### 工具准备
 
@@ -24,11 +34,36 @@ npm --version
 git --version
 jq --version     # JSON 处理
 curl --version
+rsync --version  # 推荐（保留隐藏文件）
 ```
+
+### 第一步：检测配置目录（必须）
+
+御书房支持两个配置目录，必须先确认当前使用的是哪一个：
+
+```bash
+# 检测配置目录（~/.openclaw 或 ~/.clawdbot）
+if [ -f "$HOME/.openclaw/openclaw.json" ]; then
+  CONFIG_DIR="$HOME/.openclaw"
+elif [ -f "$HOME/.clawdbot/openclaw.json" ]; then
+  CONFIG_DIR="$HOME/.clawdbot"
+else
+  echo "错误：未找到配置目录"
+  exit 1
+fi
+echo "配置目录：$CONFIG_DIR"
+
+# 如果两个目录同时存在（双安装），必须先明确选择一个：
+# export CONFIG_DIR="$HOME/.openclaw"
+# 或
+# export CONFIG_DIR="$HOME/.clawdbot"
+```
+
+> **重要**：后续所有带 `~/.openclaw` 的命令，必须替换为 `$CONFIG_DIR`（或实际检测到的路径）。
 
 ---
 
-## 第一步：原服务器 — 停止服务
+## 第二步：原服务器 — 停止服务
 
 ### Docker 部署
 
@@ -48,7 +83,7 @@ openclaw gateway stop    # 停止 Gateway
 
 ---
 
-## 第二步：原服务器 — 备份数据
+## 第三步：原服务器 — 备份数据
 
 ### 完整备份清单
 
@@ -57,8 +92,10 @@ openclaw gateway stop    # 停止 Gateway
 #### 1. OpenClaw 主配置文件（必选）
 
 ```bash
-cp ~/.openclaw/openclaw.json ~/backup/openclaw.json
+cp "$CONFIG_DIR/openclaw.json" ~/backup/openclaw.json
 ```
+
+> **注意**：如果使用 `~/.clawdbot`，将 `$CONFIG_DIR` 替换为 `~/.clawdbot`。
 
 该文件包含：
 - 所有 LLM API Key
@@ -72,27 +109,36 @@ cp ~/.openclaw/openclaw.json ~/backup/openclaw.json
 
 ```bash
 # 记忆数据库（SQLite）
-cp ~/.openclaw/memory/*.sqlite ~/backup/
+cp "$CONFIG_DIR/memory"/*.sqlite ~/backup/ 2>/dev/null || true
 
 # 项目工作记忆
-cp -r ~/clawd/memory ~/backup/clawd-memory
+rsync -a ~/clawd/memory/ ~/backup/clawd-memory/ 2>/dev/null || true
 ```
 
 #### 3. 工作目录（按需迁移）
 
 ```bash
-# 各 Agent 工作区（如有重要数据）
-cp -r ~/clawd ~/backup/clawd
+# 各 Agent 工作区（含隐藏文件，使用 rsync 保留 dotfiles）
+rsync -a ~/clawd/ ~/backup/clawd/ 2>/dev/null || true
 
 # 户部数据（包含 token 用量记录）
-cp -r ~/clawd-hubu ~/backup/clawd-hubu
+rsync -a ~/clawd-hubu/ ~/backup/clawd-hubu/ 2>/dev/null || true
 ```
 
-#### 4. 自定义 Skills（按需迁移）
+> **重要**：请勿使用 `cp -r ~/clawd/*` — 该命令会跳过隐藏文件（如 `.auto-log/`、`.cache/`），导致工作区状态不完整。推荐使用 `rsync -a` 或 `cp -a`。
+
+#### 4. Agent OAuth 凭据（按需迁移）
+
+```bash
+# Agent 的 OAuth 刷新令牌（支持飞书等第三方集成）
+rsync -a "$CONFIG_DIR/agents/" ~/backup/agents/ 2>/dev/null || true
+```
+
+#### 5. 自定义 Skills（按需迁移）
 
 ```bash
 # 自定义 skills（如有）
-cp -r ~/clawd/skills ~/backup/clawd-skills
+rsync -a ~/clawd/skills/ ~/backup/clawd-skills/ 2>/dev/null || true
 ```
 
 #### 5. .env 文件
@@ -115,12 +161,12 @@ crontab -l > ~/backup/crontab.txt 2>/dev/null || true
 # 在 ~/ 创建备份目录
 mkdir -p ~/yushufang-backup
 
-# 复制所有数据
-cp ~/.openclaw/openclaw.json ~/yushufang-backup/
-cp -r ~/.openclaw/memory ~/yushufang-backup/memory
-cp -r ~/clawd ~/yushufang-backup/clawd
-[ -d ~/clawd-hubu ] && cp -r ~/clawd-hubu ~/yushufang-backup/
-cp -r ~/clawd/skills ~/yushufang-backup/skills 2>/dev/null || true
+# 复制所有数据（使用 rsync 保留隐藏文件）
+cp "$CONFIG_DIR/openclaw.json" ~/yushufang-backup/
+rsync -a "$CONFIG_DIR/memory/" ~/yushufang-backup/memory/ 2>/dev/null || true
+rsync -a ~/clawd/ ~/yushufang-backup/clawd/ 2>/dev/null || true
+[ -d ~/clawd-hubu ] && rsync -a ~/clawd-hubu/ ~/yushufang-backup/clawd-hubu/
+rsync -a "$CONFIG_DIR/agents/" ~/yushufang-backup/agents/ 2>/dev/null || true
 cp ~/.env ~/yushufang-backup/.env 2>/dev/null || true
 
 # 记录 cron 配置
@@ -169,6 +215,21 @@ tar -xzvf yushufang-backup-YYYYMMDD.tar.gz
 
 ## 第四步：新服务器 — 安装御书房
 
+### 检测配置目录
+
+在新服务器同样需要先检测配置目录：
+
+```bash
+if [ -f "$HOME/.openclaw/openclaw.json" ]; then
+  CONFIG_DIR="$HOME/.openclaw"
+elif [ -f "$HOME/.clawdbot/openclaw.json" ]; then
+  CONFIG_DIR="$HOME/.clawdbot"
+else
+  echo "将创建新配置目录"
+fi
+echo "配置目录：${CONFIG_DIR:-~/.openclaw（将创建）}"
+```
+
 ### 安装 OpenClaw
 
 ```bash
@@ -212,47 +273,65 @@ docker compose up -d
 
 ## 第五步：新服务器 — 恢复配置
 
+> 如果使用 migrate.sh 脚本，此步骤已自动化。以下为手动恢复步骤。
+
+### 检测配置目录
+
+```bash
+CONFIG_DIR="${CONFIG_DIR:-$HOME/.openclaw}"
+echo "将恢复到：$CONFIG_DIR"
+```
+
 ### 恢复主配置文件
 
 ```bash
-# 备份安装脚本生成的新配置
-cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.new
+# 备份安装脚本生成的新配置（安全回退）
+if [ -f "$CONFIG_DIR/openclaw.json" ]; then
+  cp "$CONFIG_DIR/openclaw.json" "$CONFIG_DIR/openclaw.json.new"
+fi
 
 # 恢复备份配置
-cp ~/yushufang-backup/openclaw.json ~/.openclaw/openclaw.json
+cp ~/yushufang-backup/openclaw.json "$CONFIG_DIR/openclaw.json"
 
 # 验证配置格式
-jq empty ~/.openclaw/openclaw.json && echo "配置格式正确"
+jq empty "$CONFIG_DIR/openclaw.json" && echo "配置格式正确"
 ```
 
 ### 恢复记忆数据库
 
 ```bash
 # 确保目录存在
-mkdir -p ~/.openclaw/memory
+mkdir -p "$CONFIG_DIR/memory"
 
-# 恢复记忆
-cp ~/yushufang-backup/memory/*.sqlite ~/.openclaw/memory/ 2>/dev/null || true
+# 恢复记忆（注意保留目录）
+cp -p ~/yushufang-backup/memory/*.sqlite "$CONFIG_DIR/memory/" 2>/dev/null || true
 
 # 验证
-ls -la ~/.openclaw/memory/
+ls -la "$CONFIG_DIR/memory/"
+```
+
+### 恢复 Agent OAuth 凭据（含 auth-profiles.json）
+
+```bash
+# 使用 rsync 保留目录结构和隐藏文件
+mkdir -p "$CONFIG_DIR/agents"
+rsync -a ~/yushufang-backup/agents/ "$CONFIG_DIR/agents/" 2>/dev/null || true
+echo "Agent 目录（含 OAuth 凭据）已恢复"
 ```
 
 ### 恢复工作目录
 
 ```bash
-# 恢复主工作目录
+# 恢复主工作目录（使用 rsync 保留隐藏文件）
 mkdir -p ~/clawd
-cp -r ~/yushufang-backup/clawd/* ~/clawd/ 2>/dev/null || true
+rsync -a ~/yushufang-backup/clawd/ ~/clawd/ 2>/dev/null || true
 
 # 恢复户部数据
 mkdir -p ~/clawd-hubu
-cp -r ~/yushufang-backup/clawd-hubu/* ~/clawd-hubu/ 2>/dev/null || true
-
-# 恢复自定义 skills
-mkdir -p ~/clawd/skills
-cp -r ~/yushufang-backup/skills/* ~/clawd/skills/ 2>/dev/null || true
+rsync -a ~/yushufang-backup/clawd-hubu/ ~/clawd-hubu/ 2>/dev/null || true
 ```
+
+> **注意**：请勿使用 `cp -r ~/yushufang-backup/clawd/* ~/clawd/` — 该命令会跳过隐藏文件。
 
 ---
 
@@ -323,7 +402,7 @@ openclaw cron list
 ### Q1：迁移后 Agent 不响应
 
 检查：
-1. Discord Bot Token 是否正确（检查 ~/.openclaw/openclaw.json 中的 tokens）
+1. Discord Bot Token 是否正确（检查 `$CONFIG_DIR/openclaw.json` 中的 tokens）
 2. Bot 是否已加入正确的服务器和频道
 3. Gateway 是否正常运行：`openclaw status`
 
@@ -335,7 +414,7 @@ openclaw cron list
 
 ### Q3：记忆丢失
 
-确保恢复了 `~/.openclaw/memory/*.sqlite` 文件。记忆数据库是 SQLite 文件，丢失后无法恢复。
+确保恢复了 `$CONFIG_DIR/memory/*.sqlite` 文件（使用 `cp -p` 保留文件属性）。记忆数据库是 SQLite 文件，丢失后无法恢复。
 
 ### Q4：户部数据用量统计错乱
 

@@ -46,15 +46,15 @@ DNS 解析问题或网络被墙
 **方案 A: 使用 GitHub 镜像**
 ```bash
 # 使用 jsdelivr 镜像
-curl -fsSL https://cdn.jsdelivr.net/gh/wanikua/danghuangshang/install-lite.sh -o install-lite.sh
-bash install-lite.sh
+curl -fsSL https://cdn.jsdelivr.net/gh/1012Lonin/Yushufang/scripts/simple-install.sh -o simple-install.sh
+bash simple-install.sh
 ```
 
 **方案 B: 手动克隆仓库**
 ```bash
-git clone --depth 1 https://github.com/wanikua/danghuangshang.git
-cd danghuangshang
-bash install-lite.sh
+git clone --depth 1 https://github.com/1012Lonin/Yushufang.git
+cd Yushufang
+bash scripts/simple-install.sh
 ```
 
 **方案 C: 修改 hosts（中国大陆用户）**
@@ -72,7 +72,7 @@ bash install-lite.sh
 
 ### 症状
 ```
-bash: install-lite.sh: Permission denied
+bash: simple-install.sh: Permission denied
 ```
 
 ### 原因
@@ -80,13 +80,13 @@ bash: install-lite.sh: Permission denied
 
 ### 解决方案
 ```bash
-chmod +x install-lite.sh
-bash ./install-lite.sh
+chmod +x simple-install.sh
+bash ./simple-install.sh
 ```
 
 或直接用 bash 运行：
 ```bash
-bash install-lite.sh
+bash simple-install.sh
 ```
 
 ---
@@ -139,7 +139,7 @@ sudo yum install -y jq
 
 **手动下载配置**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/wanikua/danghuangshang/main/configs/ming-neige/openclaw.json -o ~/.openclaw/openclaw.json
+curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/configs/ming-neige/openclaw.json -o ~/.openclaw/openclaw.json
 ```
 
 ---
@@ -156,7 +156,7 @@ curl -fsSL https://raw.githubusercontent.com/wanikua/danghuangshang/main/configs
 
 **手动注入人设**
 ```bash
-cd danghuangshang
+cd Yushufang
 CONFIG_FILE=~/.openclaw/openclaw.json
 AGENTS_DIR=configs/ming-neige/agents
 
@@ -181,18 +181,15 @@ cannot be loaded because running scripts is disabled on this system
 ```
 
 ### 原因
-PowerShell 执行策略限制
+御书房当前不支持原生 Windows PowerShell 安装（无 `install.ps1`）。
 
 ### 解决方案
 
-**临时允许执行**
-```powershell
-powershell -ExecutionPolicy Bypass -File install.ps1
-```
+Windows 用户请使用 **WSL2** 方式安装（详见 [Windows WSL2 安装指南](./windows-wsl.md)）：
 
-**或永久修改策略（需要管理员权限）**
-```powershell
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```bash
+# 在 WSL2 Ubuntu 终端中运行
+bash <(curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/scripts/full-install.sh)
 ```
 
 ---
@@ -262,4 +259,4 @@ docker ps
 4. **完整错误信息**: 复制完整的报错输出
 5. **安装方式**: curl / git clone / Docker
 
-提交 Issue: https://github.com/wanikua/danghuangshang/issues
+提交 Issue: https://github.com/1012Lonin/Yushufang/issues
