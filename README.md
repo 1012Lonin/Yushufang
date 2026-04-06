@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/框架-OpenClaw-blue?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Agent-20-green?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Cron-7-orange?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/版本-1.1.1-red?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/版本-1.2.0-red?style=for-the-badge" />
 </p>
 
 <p align="center">
@@ -839,6 +839,13 @@ Yushufang/
 ## 更新日志
 
 [CHANGELOG.md](./CHANGELOG.md)
+
+---
+
+## 运维相关
+
+- [迁移指南](./docs/migration.md) — 服务器迁移完整操作手册（备份→传输→恢复→验证）
+- [卸载脚本](./scripts/uninstall.sh) — 完整卸载御书房（Docker / 非 Docker）
 
 ---
 

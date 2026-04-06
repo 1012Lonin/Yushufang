@@ -1,5 +1,5 @@
 #!/bin/bash
-# danghuangshang 自启动 + 局域网访问配置脚本
+# 御书房自启动 + 局域网访问配置脚本
 
 set -e
 
@@ -38,7 +38,7 @@ if [ "$ENABLE_SYSTEMD" = "y" ] || [ "$ENABLE_SYSTEMD" = "Y" ]; then
   echo ""
   echo "⚙️  创建 systemd 服务..."
   
-  sudo tee /etc/systemd/system/danghuangshang-gui.service > /dev/null <<EOF
+  sudo tee /etc/systemd/system/yushufang-gui.service > /dev/null <<EOF
 [Unit]
 Description=Danghuangshang GUI
 After=network.target
@@ -59,8 +59,8 @@ WantedBy=multi-user.target
 EOF
 
   sudo systemctl daemon-reload
-  sudo systemctl enable danghuangshang-gui
-  sudo systemctl start danghuangshang-gui
+  sudo systemctl enable yushufang-gui
+  sudo systemctl start yushufang-gui
   
   echo "✅ systemd 服务已创建并启动"
 fi
@@ -77,7 +77,7 @@ echo "局域网访问地址："
 echo "  http://<本机 IP>:$PORT"
 echo ""
 echo "服务管理命令："
-echo "  sudo systemctl status danghuangshang-gui"
-echo "  sudo systemctl stop danghuangshang-gui"
-echo "  sudo systemctl restart danghuangshang-gui"
+echo "  sudo systemctl status yushufang-gui"
+echo "  sudo systemctl stop yushufang-gui"
+echo "  sudo systemctl restart yushufang-gui"
 echo ""

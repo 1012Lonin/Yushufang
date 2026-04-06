@@ -7,6 +7,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0
 
 ---
 
+## [1.2.0] — 2026-04-06
+
+### Added
+
+- **scripts/uninstall.sh**: 完整卸载脚本，支持 Docker/non-Docker 全部清理项（npm 包 / 配置目录 / 工作目录 / Docker 容器镜像 / crontab）
+- **docs/migration.md**: 服务器迁移完整操作手册（备份清单 → 传输 → 配置恢复 → Cron 重配 → 验证步骤）
+
+### Changed
+
+- **安装脚本精简**：保留 `scripts/full-install.sh` / `install-mac.sh` / `Dockerfile`，删除 `install-lite.sh` / `install.ps1` / `scripts/full-install.ps1`
+- **上游引用清理**：所有保留脚本和 Dockerfile 的 danghuangshang 引用更新为 Yushufang（`wanikua/danghuangshang` → `1012Lonin/Yushufang`）
+- **README.md**：新增运维相关入口（迁移指南 + 卸载脚本链接）
+
+### Fixed
+
+- `install-lite.sh`: 硬编码错误路径 `$HOME/clawd/danghuangshang/`（文件已删除）
+- `Dockerfile`: OCI 标签更新（maintainer / version / repo URL）
+
+---
+
 ## [1.1.1] — 2026-04-06
 
 ### Fixed

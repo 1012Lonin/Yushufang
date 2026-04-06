@@ -1,6 +1,6 @@
 {
   "name": "yushufang",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "御书房 - 个人学术开发者的 AI 多 Agent 协作系统，基于 danghuangshang 上游定制",
   "main": "index.js",
   "scripts": {

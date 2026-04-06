@@ -4,19 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**danghuangshang** (the "Emperor") is a multi-agent AI collaboration system built on the **[OpenClaw](https://github.com/openclaw/openclaw)** framework. It maps China's ancient Ming Dynasty governmental structure onto a modern AI agent team — each minister is a specialized AI agent (Discord Bot) with clear domain responsibility. Users issue "imperial decrees" by @mentioning agents in Discord.
+**Yushufang** (御书房) is a multi-agent AI collaboration system built on the **[OpenClaw](https://github.com/openclaw/openclaw)** framework, customized for personal academic developers. It maps China's ancient Ming Dynasty governmental structure onto a modern AI agent team — each minister is a specialized AI agent (Discord Bot) with clear domain responsibility. Users issue "imperial decrees" by @mentioning agents in Discord.
 
-- License: MIT | Version: 3.5.3 | Author: 菠萝菠菠 (wanikua)
+- License: MIT | Version: 1.2.0 | Author: Lonin
 - Node.js >= 22.16.0 required
 
 ## Key Commands
 
 ### Installation
 ```bash
-bash scripts/full-install.sh          # Full local install
-bash install-lite.sh                  # Lite install (assumes OpenClaw exists)
+bash scripts/full-install.sh          # Full local install (支持远程 curl)
 bash install-mac.sh                   # macOS-specific install
-powershell -ExecutionPolicy Bypass -File install.ps1   # Windows
+docker compose up -d                  # Docker deployment
 ```
 
 ### Running & Testing

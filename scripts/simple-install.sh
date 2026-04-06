@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================
-# AI 朝廷 · 简化安装脚本
-# 用法：bash <(curl -fsSL https://raw.githubusercontent.com/wanikua/danghuangshang/main/scripts/simple-install.sh)
+# 御书房 · 简化安装脚本
+# 用法：bash <(curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/scripts/simple-install.sh)
 # ============================================
 
 set -e
@@ -75,12 +75,12 @@ fi
 echo -e "  ${CYAN}下载 Agent 人设...${NC}"
 mkdir -p "$CONFIG_DIR/agents"
 for agent in silijian neige duchayuan bingbu hubu libu gongbu xingbu; do
-  curl -fsSL "https://raw.githubusercontent.com/wanikua/danghuangshang/main/configs/$REGIME/agents/$agent.md" -o "$CONFIG_DIR/agents/$agent.md" 2>/dev/null || true
+  curl -fsSL "https://raw.githubusercontent.com/1012Lonin/Yushufang/main/configs/$REGIME/agents/$agent.md" -o "$CONFIG_DIR/agents/$agent.md" 2>/dev/null || true
 done
 echo -e "  ${GREEN}✓${NC} Agent 人设已下载"
 
 # 下载配置
-TEMPLATE_URL="https://raw.githubusercontent.com/wanikua/danghuangshang/main/configs/$REGIME/openclaw.json"
+TEMPLATE_URL="https://raw.githubusercontent.com/1012Lonin/Yushufang/main/configs/$REGIME/openclaw.json"
 echo -e "  ${CYAN}下载配置模板...${NC}"
 if curl -fsSL "$TEMPLATE_URL" -o "$CONFIG_DIR/openclaw.json" 2>/dev/null; then
   echo -e "${GREEN}✓${NC} 配置已安装：$CONFIG_DIR/openclaw.json"

@@ -23,10 +23,10 @@ RUN npx tsc -b && npx vite build --emptyOutDir
 FROM node:22-alpine
 
 # 元数据
-LABEL maintainer="wanikua" \
-      description="AI 朝廷 - 多 Agent 协作框架" \
-      org.opencontainers.image.source="https://github.com/wanikua/danghuangshang" \
-      org.opencontainers.image.version="3.6.0" \
+LABEL maintainer="Lonin" \
+      description="御书房 - 个人学术开发者 AI 多 Agent 协作系统" \
+      org.opencontainers.image.source="https://github.com/1012Lonin/Yushufang" \
+      org.opencontainers.image.version="1.2.0" \
       org.opencontainers.image.licenses="MIT"
 
 # 安装系统依赖（合并为单层减小体积）

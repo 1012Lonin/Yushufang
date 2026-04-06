@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================
-# AI 朝廷 — macOS 本地安装脚本
+# 御书房 — macOS 本地安装脚本
 # 适用于 macOS (Intel / Apple Silicon)
 # 用法:
 #   bash install-mac.sh              # 交互式安装
@@ -128,7 +128,7 @@ if [ -f "$WORKSPACE/package.json" ]; then
 else
   echo -e "  ${GREEN}✓${NC} 跳过项目依赖安装（无 package.json）"
   echo -e "  ${CYAN}提示：如需安装项目依赖，请先克隆仓库:${NC}"
-  echo -e "    git clone https://github.com/wanikua/danghuangshang.git $WORKSPACE"
+  echo -e "    git clone https://github.com/1012Lonin/Yushufang.git $WORKSPACE"
 fi
 
 # ---- 安装默认 Skill: self-improving ----
@@ -286,7 +286,7 @@ fi
 
 
 # ---- 从 GitHub 下载配置模板并按模式适配 ----
-TEMPLATE_RAW_URL="https://raw.githubusercontent.com/wanikua/danghuangshang/main/configs/ming-neige/openclaw.json"
+TEMPLATE_RAW_URL="https://raw.githubusercontent.com/1012Lonin/Yushufang/main/configs/ming-neige/openclaw.json"
 
 generate_config_from_template() {
   local mode="$1"       # webui | feishu | discord
@@ -407,7 +407,7 @@ fi
 echo ""
 echo -e "${YELLOW}[6/6] Dashboard Web UI...${NC}"
 if [ "$INSTALL_GUI" = "yes" ]; then
-    REPO_URL="https://github.com/wanikua/danghuangshang"
+    REPO_URL="https://github.com/1012Lonin/Yushufang"
     GUI_DIR="$WORKSPACE/gui"
     if [ -d "$GUI_DIR" ]; then
         echo -e "  ${GREEN}✓ gui/ 目录已存在，跳过克隆${NC}"
@@ -457,7 +457,7 @@ echo "     e) 事件接收选择 WebSocket 长连接"
 echo "     f) 把 appId/appSecret 填到配置文件的 silijian 位置"
 echo "     g) 创建版本并发布应用"
 echo ""
-echo -e "     📖 详细指南: ${CYAN}https://github.com/wanikua/danghuangshang/blob/main/飞书配置指南.md${NC}"
+echo -e "     📖 详细指南: ${CYAN}https://github.com/1012Lonin/Yushufang/blob/main/README.md${NC}"
 elif [ "$DEPLOY_MODE" = "3" ]; then
 echo -e "  ${YELLOW}2. 无需配置 Bot${NC}"
 echo "     WebUI 模式直接通过浏览器访问即可"
@@ -505,4 +505,4 @@ echo ""
 # 创建各 agent 独立工作区
 create_agent_workspaces
 
-echo -e "完整教程：${BLUE}https://github.com/wanikua/danghuangshang${NC}"
+echo -e "完整教程：${BLUE}https://github.com/1012Lonin/Yushufang${NC}"

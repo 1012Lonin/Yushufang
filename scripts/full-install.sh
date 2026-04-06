@@ -1,9 +1,9 @@
 #!/bin/bash
 # ============================================
-# danghuangshang 完整安装脚本（支持远程执行）
-# 
+# Yushufang 御书房完整安装脚本（支持远程执行）
+#
 # 用法：
-#   bash <(curl -fsSL https://raw.githubusercontent.com/wanikua/danghuangshang/main/scripts/full-install.sh)
+#   bash <(curl -fsSL https://raw.githubusercontent.com/1012Lonin/Yushufang/main/scripts/full-install.sh)
 # ============================================
 
 set -e
@@ -18,7 +18,7 @@ NC='\033[0m'
 
 echo ""
 echo -e "${CYAN}╔══════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║    🏯 AI 朝廷 · danghuangshang      ║${NC}"
+echo -e "${CYAN}║    🏯 御书房 · Yushufang      ║${NC}"
 echo -e "${CYAN}║        完整安装向导                  ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════╝${NC}"
 echo ""
@@ -29,7 +29,7 @@ echo ""
 
 echo -e "${BLUE}[0/6] 准备环境...${NC}"
 
-INSTALL_DIR="$HOME/danghuangshang-installer"
+INSTALL_DIR="$HOME/Yushufang-installer"
 
 if [ -d "$INSTALL_DIR" ]; then
   echo -e "  ${YELLOW}i${NC} 清理旧安装目录"
@@ -37,7 +37,7 @@ if [ -d "$INSTALL_DIR" ]; then
 fi
 
 echo -e "  ${CYAN}正在克隆仓库...${NC}"
-git clone --depth 1 https://github.com/wanikua/danghuangshang.git "$INSTALL_DIR"
+git clone --depth 1 https://github.com/1012Lonin/Yushufang.git "$INSTALL_DIR"
 echo -e "  ${GREEN}✓${NC} 仓库已克隆到：$INSTALL_DIR"
 
 cd "$INSTALL_DIR"
@@ -406,6 +406,8 @@ echo ""
 echo "  查看状态：${CYAN}openclaw status${NC}"
 echo "  切换制度：${CYAN}bash $INSTALL_DIR/scripts/switch-regime.sh${NC}"
 echo "  恢复人设：${CYAN}bash $INSTALL_DIR/scripts/init-personas.sh${NC}"
+echo "  完整文档：${CYAN}https://github.com/1012Lonin/Yushufang${NC}"
+echo "  迁移指南：${CYAN}https://github.com/1012Lonin/Yushufang/blob/main/docs/migration.md${NC}"
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════${NC}"
 echo ""
