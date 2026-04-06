@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **scripts/pre-update-check.sh**: `date -d` 改为跨平台兼容实现（支持 macOS BSD + Linux GNU）
+- **scripts/pre-update-check.sh**: `--install-hook` 改为检测已有 hook，保留备份而非直接覆盖
+- **scripts/safe-update.sh**: `--rollback` 同时支持 safe-update 自身备份格式和 backup-all 时间戳文件格式
+
 ### Enhanced
 
 - **scripts/pre-update-check.sh**: 完整重写为 8 项安全检查（+ allowBots/@everyone/@here 安全配置）

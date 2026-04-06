@@ -47,13 +47,48 @@ issues=0
 warnings=0
 
 # ============================================
+# 跨平台辅助函数
+# ============================================
+
+# 计算两个 YYYYMMDD 日期之间相差天数（macOS BSD + Linux GNU 兼容）
+days_between() {
+  local date_str="$1"
+  local ts1 ts2
+  # 检测 date 命令支持哪种语法
+  if date -d "20000101" +%s >/dev/null 2>&1; then
+    # GNU/Linux: date -d
+    ts1=$(date -d "$date_str" +%s 2>/dev/null || echo 0)
+    ts2=$(date +%s)
+  else
+    # macOS BSD: date -j -f
+    ts1=$(date -j -f "%Y%m%d" "$date_str" +%s 2>/dev/null || echo 0)
+    ts2=$(date +%s)
+  fi
+  echo $(( (ts2 - ts1) / 86400 ))
+}
+
+# ============================================
 # Git Hook 安装
 # ============================================
 install_git_hooks() {
   local hook_dir="$PROJECT_ROOT/.git/hooks"
   local hook_file="$hook_dir/pre-commit"
+  local hook_backup="$hook_dir/pre-commit.pre-yushufang.bak"
 
   echo -e "${CYAN}[Git Hook]${NC} 安装提交保护钩子..."
+
+  # 检查是否已有钩子
+  if [ -f "$hook_file" ] && [ -s "$hook_file" ]; then
+    # 已存在御书房 hook，跳过
+    if grep -q "御书房" "$hook_file" 2>/dev/null; then
+      echo -e "  ${GREEN}✓${NC} 御书房 pre-commit hook 已存在，无需重复安装"
+      return 0
+    fi
+    # 已有其他钩子，先备份
+    echo -e "  ${YELLOW}⚠${NC} 检测到已有 pre-commit hook，已备份至："
+    echo "     $hook_backup"
+    cp "$hook_file" "$hook_backup"
+  fi
 
   # 创建 pre-commit hook：禁止提交真实 API Key / Token
   cat > "$hook_file" <<'HOOK'
@@ -112,6 +147,9 @@ HOOK
 
   chmod +x "$hook_file"
   echo -e "  ${GREEN}✓${NC} pre-commit hook 已安装：$hook_file"
+  if [ -f "$hook_backup" ]; then
+    echo -e "  ${YELLOW}ℹ${NC} 原钩子已备份：$hook_backup"
+  fi
   echo "  功能：提交时自动拦截真实 API Key / Token / .env 敏感文件"
 }
 
@@ -343,7 +381,7 @@ if [ -d "$BACKUP_DIR" ]; then
     if [ "$backup_date" = "$today" ]; then
       echo -e "  ${GREEN}✓${NC} 今日已备份"
     else
-      days_since=$(( ($(date +%s) - $(date -d "${backup_date:0:4}-${backup_date:4:2}-${backup_date:6:2}" +%s) ) / 86400 ))
+      days_since=$(days_between "$backup_date")
       echo -e "  ${YELLOW}⚠${NC} 上次备份在 ${days_since} 天前，建议先备份"
       warnings=$((warnings + 1))
     fi

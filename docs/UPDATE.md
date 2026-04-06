@@ -123,11 +123,15 @@ grep "御书房" .git/hooks/pre-commit || echo "未安装"
 
 ## 回滚
 
-### 方式一：交互式回滚
+### 方式一：交互式回滚（推荐）
 
 ```bash
 bash scripts/safe-update.sh --rollback
 ```
+
+此方式自动识别两种备份格式：
+- **safe-update 备份**：`safe-update.sh --backup` 或完整流程创建（目录格式）
+- **backup-all 备份**：`backup-all.sh` 创建的时间戳文件（单文件格式）
 
 ### 方式二：手动恢复
 
@@ -135,7 +139,7 @@ bash scripts/safe-update.sh --rollback
 # 查看可用备份（按时间倒序）
 ls -lt ~/.openclaw/backups/configs/
 
-# 恢复配置
+# 恢复配置（YYY... 为时间戳后缀）
 cp ~/.openclaw/backups/configs/openclaw.json.YYYYMMDD_HHMMSS ~/.openclaw/openclaw.json
 
 # 验证格式

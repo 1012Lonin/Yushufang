@@ -154,43 +154,77 @@ do_update() {
 
 # 回滚
 rollback() {
-    local latest_backup
-    latest_backup=$(cat "$BACKUP_DIR/latest" 2>/dev/null)
-    
-    if [ -z "$latest_backup" ] || [ ! -d "$latest_backup" ]; then
-        error "未找到备份，无法回滚"
+    local backup_path=""
+    local rollback_type=""
+
+    # 方式一：safe-update.sh 自身备份（~/.openclaw/backups/latest）
+    if [ -f "$BACKUP_DIR/latest" ] && [ -d "$(cat "$BACKUP_DIR/latest" 2>/dev/null)" ]; then
+        backup_path=$(cat "$BACKUP_DIR/latest")
+        rollback_type="safe-update"
+        info "找到 safe-update 备份：$backup_path"
+
+    # 方式二：backup-all.sh 产生的最新配置备份
+    elif [ -d "$HOME/.openclaw/backups/configs" ]; then
+        local latest_config
+        latest_config=$(find "$HOME/.openclaw/backups/configs" -name "openclaw.json.*" -type f | sort -r | head -1)
+        if [ -n "$latest_config" ]; then
+            backup_path="$latest_config"
+            rollback_type="backup-all"
+            info "找到 backup-all 备份：$backup_path"
+        fi
     fi
-    
-    info "正在回滚到：$latest_backup"
+
+    if [ -z "$backup_path" ]; then
+        error "未找到任何备份，无法回滚"
+    fi
+
+    info "正在回滚..."
     warn "回滚将覆盖当前配置！"
     read -p "是否继续？[y/N] " confirm
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
         info "已取消回滚"
         return 0
     fi
+    read -p "是否继续？[y/N] " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        info "已取消回滚"
+        return 0
+    fi
     
-    # 恢复 openclaw.json（先备份当前配置）
+    # 回滚前先备份当前配置
     if [ -f "$OPENCLAW_CONFIG" ]; then
         cp "$OPENCLAW_CONFIG" "$BACKUP_DIR/pre_rollback_$TIMESTAMP.json"
         warn "已备份当前配置到：$BACKUP_DIR/pre_rollback_$TIMESTAMP.json"
     fi
-    if [ -f "$latest_backup/openclaw.json" ]; then
-        cp "$latest_backup/openclaw.json" "$OPENCLAW_CONFIG"
-        success "已恢复 openclaw.json"
+
+    # 根据备份类型恢复
+    if [ "$rollback_type" = "safe-update" ]; then
+        # safe-update 备份是目录
+        if [ -f "$backup_path/openclaw.json" ]; then
+            cp "$backup_path/openclaw.json" "$OPENCLAW_CONFIG"
+            success "已恢复 openclaw.json"
+        fi
+        if [ -d "$backup_path/configs" ]; then
+            cp -r "$backup_path/configs" "$CLAWD_DIR/"
+            success "已恢复 configs/"
+        fi
+        if [ -d "$backup_path/agents" ]; then
+            cp -r "$backup_path/agents" "$CLAWD_DIR/"
+            success "已恢复 agents/"
+        fi
+    else
+        # backup-all 备份是单个文件
+        cp "$backup_path" "$OPENCLAW_CONFIG"
+        success "已恢复 openclaw.json（backup-all 格式）"
     fi
-    
-    # 恢复 configs
-    if [ -d "$latest_backup/configs" ]; then
-        cp -r "$latest_backup/configs" "$CLAWD_DIR/"
-        success "已恢复 configs/"
+
+    # 验证配置
+    if jq empty "$OPENCLAW_CONFIG" 2>/dev/null; then
+        success "配置文件格式正确"
+    else
+        error "恢复的配置文件格式错误！请检查：$OPENCLAW_CONFIG"
     fi
-    
-    # 恢复 agents
-    if [ -d "$latest_backup/agents" ]; then
-        cp -r "$latest_backup/agents" "$CLAWD_DIR/"
-        success "已恢复 agents/"
-    fi
-    
+
     success "回滚完成！请重启 gateway: openclaw gateway restart"
 }
 
