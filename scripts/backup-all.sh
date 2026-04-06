@@ -15,25 +15,30 @@
 #   bash scripts/backup-all.sh --dry-run    # 仅显示将备份什么
 # ============================================
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-# 备份存放在 ~/.openclaw/backups/（配置目录），而非项目目录
-BACKUP_DIR="${BACKUP_DIR:-$HOME/.openclaw/backups}"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
-# 配置目录（自动检测）
-if [ -f "$HOME/.openclaw/openclaw.json" ]; then
+# 配置目录：优先环境变量，否则自动检测 ~/.openclaw 和 ~/.clawdbot，双安装时报错
+if [ -n "${CONFIG_DIR:-}" ]; then
+  : # operator override，保留原值
+elif [ -f "$HOME/.openclaw/openclaw.json" ] && [ -f "$HOME/.clawdbot/openclaw.json" ]; then
+  echo "错误：~/.openclaw 和 ~/.clawdbot 同时存在" >&2
+  echo "请明确指定：CONFIG_DIR=~/.openclaw 或 CONFIG_DIR=~/.clawdbot bash $0" >&2
+  exit 1
+elif [ -f "$HOME/.openclaw/openclaw.json" ]; then
   CONFIG_DIR="$HOME/.openclaw"
 elif [ -f "$HOME/.clawdbot/openclaw.json" ]; then
   CONFIG_DIR="$HOME/.clawdbot"
-elif [ -f "$HOME/.openclaw/openclaw.json" ]; then
-  CONFIG_DIR="$HOME/.openclaw"
 else
-  echo "错误：未找到配置目录"
+  echo "错误：未找到配置目录" >&2
   exit 1
 fi
+
+# 备份目录基于检测到的配置目录（支持环境变量覆盖）
+BACKUP_DIR="${BACKUP_DIR:-$CONFIG_DIR/backups}"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -44,7 +49,7 @@ NC='\033[0m'
 
 echo ""
 echo -e "${CYAN}╔══════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║    🛡️  AI 朝廷 · 数据备份            ║${NC}"
+echo -e "${CYAN}║    🛡️  御书房 · 数据备份            ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════╝${NC}"
 echo ""
 

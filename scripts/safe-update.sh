@@ -14,7 +14,7 @@
 #   ./safe-update.sh --rollback  # 回滚到上次备份
 #
 
-set -e
+set -euo pipefail
 
 # 颜色输出
 RED='\033[0;31m'
@@ -23,17 +23,47 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 路径配置
-CLAWD_DIR="${CLAWD_DIR:-$HOME/.openclaw}"
-BACKUP_DIR="${BACKUP_DIR:-$CLAWD_DIR/backups}"
-OPENCLAW_CONFIG="${OPENCLAW_CONFIG:-$HOME/.openclaw/openclaw.json}"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-
-# 打印函数
+# 路径配置：优先使用环境变量（operator 覆盖），否则自动检测
+if [ -n "${CLAWD_DIR:-}" ]; then
+  : # operator override，保留原值
+elif [ -f "$HOME/.openclaw/openclaw.json" ] && [ -f "$HOME/.clawdbot/openclaw.json" ]; then
+  echo -e "${RED}✗ 错误：~/.openclaw 和 ~/.clawdbot 同时存在${NC}" >&2
+  echo "  请明确指定配置目录：export CLAWD_DIR=~/.openclaw 或 export CLAWD_DIR=~/.clawdbot" >&2
+  exit 1
+elif [ -f "$HOME/.openclaw/openclaw.json" ]; then
+  CLAWD_DIR="$HOME/.openclaw"
+elif [ -f "$HOME/.clawdbot/openclaw.json" ]; then
+  CLAWD_DIR="$HOME/.clawdbot"
+else
+  CLAWD_DIR="$HOME/.openclaw"
+fi
+# 打印函数（必须在使用前定义）
 info()    { echo -e "${BLUE}[INFO]${NC} $1"; }
 success() { echo -e "${GREEN}[OK]${NC} $1"; }
 warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
 error()   { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
+
+# 路径配置：优先使用环境变量（operator 覆盖），否则自动检测
+if [ -n "${CLAWD_DIR:-}" ]; then
+  : # operator override，保留原值
+elif [ -f "$HOME/.openclaw/openclaw.json" ] && [ -f "$HOME/.clawdbot/openclaw.json" ]; then
+  echo -e "${RED}✗ 错误：~/.openclaw 和 ~/.clawdbot 同时存在${NC}" >&2
+  echo "  请明确指定：export CLAWD_DIR=~/.openclaw 或 export CLAWD_DIR=~/.clawdbot" >&2
+  exit 1
+elif [ -f "$HOME/.openclaw/openclaw.json" ]; then
+  CLAWD_DIR="$HOME/.openclaw"
+elif [ -f "$HOME/.clawdbot/openclaw.json" ]; then
+  CLAWD_DIR="$HOME/.clawdbot"
+else
+  CLAWD_DIR="$HOME/.openclaw"
+fi
+BACKUP_DIR="${BACKUP_DIR:-$CLAWD_DIR/backups}"
+OPENCLAW_CONFIG="${OPENCLAW_CONFIG:-$CLAWD_DIR/openclaw.json}"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+# 打印已解析的配置目标
+info "配置目录：$CLAWD_DIR"
+info "配置文件：$OPENCLAW_CONFIG"
 
 # 创建备份目录
 init_backup_dir() {
@@ -79,39 +109,59 @@ backup_configs() {
 safety_check() {
     info "正在执行安全检查..."
     local errors=0
-    
-    # 检查 1: allowBots 设置
+
+    # 检查 1: allowBots 设置（使用 jq，支持布尔型和字符串型）
     if [ -f "$OPENCLAW_CONFIG" ]; then
-        local allow_bots
-        allow_bots=$(grep -o '"allowBots"[[:space:]]*:[[:space:]]*"[^"]*"' "$OPENCLAW_CONFIG" | head -1)
-        if echo "$allow_bots" | grep -q '"mentions"'; then
-            success "allowBots 配置正确：mentions"
-        elif echo "$allow_bots" | grep -q 'true'; then
-            error "❌ allowBots=true 危险！会导致机器人循环。请改为 \"mentions\""
+        if ! command -v jq >/dev/null 2>&1; then
+            error "❌ jq 未安装，无法验证配置"
+            ((errors++))
+        elif ! jq empty "$OPENCLAW_CONFIG" 2>/dev/null; then
+            error "❌ 配置文件 JSON 格式错误，无法继续安全检查"
             ((errors++))
         else
-            warn "allowBots 配置：$allow_bots"
+            local allow_bots
+            allow_bots=$(jq -r '.channels.discord.allowBots // "not-set"' "$OPENCLAW_CONFIG" 2>/dev/null)
+
+            case "$allow_bots" in
+            mentions)
+                success "allowBots=mentions（安全）"
+                ;;
+            false)
+                success "allowBots=false（安全）"
+                ;;
+            true)
+                error "❌ allowBots=true 危险！会导致机器人循环。请改为 \"mentions\""
+                ((errors++))
+                ;;
+            not-set)
+                warn "allowBots 未配置（建议设为 mentions）"
+                ;;
+            *)
+                warn "allowBots=$allow_bots（请确认为 mentions 或 false）"
+                ;;
+        esac
         fi
-        
+
         # 检查 2: mentionPatterns 是否包含 @everyone
-        if grep -q '@everyone' "$OPENCLAW_CONFIG"; then
+        if grep -q '@everyone' "$OPENCLAW_CONFIG" 2>/dev/null; then
             error "❌ 发现 @everyone 配置！这是核弹开关，必须移除"
             ((errors++))
         else
             success "未发现 @everyone 配置"
         fi
-        
+
         # 检查 3: mentionPatterns 是否包含 @here
-        if grep -q '@here' "$OPENCLAW_CONFIG"; then
+        if grep -q '@here' "$OPENCLAW_CONFIG" 2>/dev/null; then
             error "❌ 发现 @here 配置！必须移除"
             ((errors++))
         else
             success "未发现 @here 配置"
         fi
     else
-        warn "未找到配置文件，跳过检查"
+        error "❌ 未找到配置文件：$OPENCLAW_CONFIG"
+        ((errors++))
     fi
-    
+
     if [ $errors -gt 0 ]; then
         echo ""
         error "安全检查失败！发现 $errors 个严重问题，请修复后再更新"
@@ -163,14 +213,14 @@ rollback() {
         rollback_type="safe-update"
         info "找到 safe-update 备份：$backup_path"
 
-    # 方式二：backup-all.sh 产生的最新配置备份
-    elif [ -d "$HOME/.openclaw/backups/configs" ]; then
-        local latest_config
-        latest_config=$(find "$HOME/.openclaw/backups/configs" -name "openclaw.json.*" -type f | sort -r | head -1)
-        if [ -n "$latest_config" ]; then
-            backup_path="$latest_config"
+    # 方式二：backup-all.sh 产生的最新配置备份（仅搜索当前配置根的备份目录）
+    elif [ -d "$BACKUP_DIR/configs" ]; then
+        local newest
+        newest=$(find "$BACKUP_DIR/configs" -name "openclaw.json.*" -type f -exec ls -t {} + 2>/dev/null | head -1 || echo "")
+        if [ -n "$newest" ]; then
+            backup_path="$newest"
             rollback_type="backup-all"
-            info "找到 backup-all 备份：$backup_path"
+            info "找到最新 backup-all 备份：$backup_path"
         fi
     fi
 
@@ -180,11 +230,6 @@ rollback() {
 
     info "正在回滚..."
     warn "回滚将覆盖当前配置！"
-    read -p "是否继续？[y/N] " confirm
-    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-        info "已取消回滚"
-        return 0
-    fi
     read -p "是否继续？[y/N] " confirm
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
         info "已取消回滚"
