@@ -246,69 +246,118 @@ main() {
   weekly_val=$(week_total)
 
   # ── 写 api-usage.json（向后兼容）─────────────────────────────
-  python3 -c "
-import json
+  local _ts _wk
+  _ts=$(date '+%Y-%m-%dT%H:%M:%S%z')
+  _wk=$(iso_week)
+  TOTAL_TOKENS="$total_tokens" \
+  MONTHLY_PROGRESS="$progress" \
+  DAILY_DELTA="$daily_delta_val" \
+  WEEK_NUM="$_wk" \
+  WEEKLY_TOKENS="$weekly_val" \
+  ROLLING_TOKENS="${rolling:-}" \
+  TS="$_ts" \
+  DATA_DIR="$DATA_DIR" \
+    python3 -c "
+import json, os
 d = {
-  'totalTokens': ${total_tokens},
-  'monthlyProgress': ${progress},
-  'dailyTokens': ${daily_delta_val},
-  'weekNumber': '$(iso_week)',
-  'weekTokens': ${weekly_val},
-  'rollingWindowTokens': ${rolling:-null},
-  'ts': '$(date '+%Y-%m-%dT%H:%M:%S%z')'
+  'totalTokens': int(os.environ['TOTAL_TOKENS']),
+  'monthlyProgress': float(os.environ['MONTHLY_PROGRESS']),
+  'dailyTokens': int(os.environ['DAILY_DELTA']),
+  'weekNumber': os.environ['WEEK_NUM'],
+  'weekTokens': int(os.environ['WEEKLY_TOKENS']),
+  'rollingWindowTokens': int(os.environ['ROLLING_TOKENS']) if os.environ.get('ROLLING_TOKENS') else None,
+  'ts': os.environ['TS']
 }
-with open('$DATA_DIR/api-usage.json', 'w') as f:
+with open(os.environ['DATA_DIR'] + '/api-usage.json', 'w') as f:
     json.dump(d, f, indent=2, ensure_ascii=False)
 "
 
   # ── 追加 tick ───────────────────────────────────────────────
-  echo '{"ts":"'"$(date '+%Y-%m-%dT%H:%M:%S%z')"'","totalTokens":'"$total_tokens"','"'"'dailyTokens'"'"':'"$daily_delta_val"',"monthlyProgress":'"$progress"',"rollingWindowTokens":'"${rolling:-null}"'}' >> "$DATA_DIR/ticks/$(date '+%Y-%m-%d').jsonl"
+  TOTAL_TOKENS="$total_tokens" \
+  MONTHLY_PROGRESS="$progress" \
+  DAILY_DELTA="$daily_delta_val" \
+  ROLLING_TOKENS="${rolling:-}" \
+  TS="$(date '+%Y-%m-%dT%H:%M:%S%z')" \
+  DATA_DIR="$DATA_DIR" \
+    python3 -c "
+import json, os, datetime
+entry = {
+  'ts': os.environ['TS'],
+  'totalTokens': int(os.environ['TOTAL_TOKENS']),
+  'dailyTokens': int(os.environ['DAILY_DELTA']),
+  'monthlyProgress': float(os.environ['MONTHLY_PROGRESS']),
+  'rollingWindowTokens': int(os.environ['ROLLING_TOKENS']) if os.environ.get('ROLLING_TOKENS') else None,
+}
+with open(os.environ['DATA_DIR'] + '/ticks/' + datetime.date.today().isoformat() + '.jsonl', 'a') as f:
+    f.write(json.dumps(entry, ensure_ascii=False) + '\n')
+"
 
   # ── 写滚动窗口快照 ──────────────────────────────────────────
   if [[ -n "$rolling" ]]; then
-    python3 -c "
-import json
-with open('$DATA_DIR/rolling/rolling-window.json','w') as f:
-    json.dump({'windowTokens':${rolling},'windowHours':${ROLLING_HOURS},'computedAt':'$(date '+%Y-%m-%dT%H:%M:%S%z')'}, f, indent=2, ensure_ascii=False)
+    ROLLING_TOKENS="$rolling" \
+    ROLLING_HOURS="$ROLLING_HOURS" \
+    TS="$(date '+%Y-%m-%dT%H:%M:%S%z')" \
+    DATA_DIR="$DATA_DIR" \
+      python3 -c "
+import json, os
+d = {
+  'windowTokens': int(os.environ['ROLLING_TOKENS']),
+  'windowHours': int(os.environ['ROLLING_HOURS']),
+  'computedAt': os.environ['TS']
+}
+with open(os.environ['DATA_DIR'] + '/rolling/rolling-window.json', 'w') as f:
+    json.dump(d, f, indent=2, ensure_ascii=False)
 "
   fi
 
   # ── 每日 0 点：写当日快照 ─────────────────────────────────
   local today_snap="$DATA_DIR/daily-snapshots/$(date '+%Y-%m-%d').json"
   if [[ ! -f "$today_snap" ]]; then
-    python3 -c "
-import json
+    TOTAL_TOKENS="$total_tokens" \
+    MONTHLY_PROGRESS="$progress" \
+    DAILY_DELTA="$daily_delta_val" \
+    WEEK_NUM="$(iso_week)" \
+    WEEKLY_TOKENS="$weekly_val" \
+    ROLLING_TOKENS="${rolling:-}" \
+    DATA_DIR="$DATA_DIR" \
+      python3 -c "
+import json, os, datetime
 d = {
-  'date': '$(date '+%Y-%m-%d')',
-  'totalTokens': ${total_tokens},
-  'dailyTokens': ${daily_delta_val},
-  'monthlyProgress': ${progress},
-  'weekNumber': '$(iso_week)',
-  'weekTokens': ${weekly_val},
-  'rollingWindowTokens': ${rolling:-null}
+  'date': datetime.date.today().isoformat(),
+  'totalTokens': int(os.environ['TOTAL_TOKENS']),
+  'dailyTokens': int(os.environ['DAILY_DELTA']),
+  'monthlyProgress': float(os.environ['MONTHLY_PROGRESS']),
+  'weekNumber': os.environ['WEEK_NUM'],
+  'weekTokens': int(os.environ['WEEKLY_TOKENS']),
+  'rollingWindowTokens': int(os.environ['ROLLING_TOKENS']) if os.environ.get('ROLLING_TOKENS') else None
 }
-with open('$today_snap', 'w') as f:
+with open(os.environ['DATA_DIR'] + '/daily-snapshots/' + datetime.date.today().isoformat() + '.json', 'w') as f:
     json.dump(d, f, indent=2, ensure_ascii=False)
-"
+" 2>/dev/null || true
   fi
 
   # ── 周一 0 点：写周快照 ───────────────────────────────────
   local week_file="$DATA_DIR/weekly-snapshots/$(iso_week).json"
   if [[ ! -f "$week_file" ]]; then
-    # 取过去 7 天每日快照
     local daily_files
     daily_files=$(ls -t "$DATA_DIR/daily-snapshots/"*.json 2>/dev/null | head -7)
-    python3 -c "
-import os, json
-files = '''$daily_files'''.strip().split()
+    WEEK_FILES="$daily_files" \
+    TOTAL_TOKENS="$total_tokens" \
+    MONTHLY_PROGRESS="$progress" \
+    WEEK_NUM="$(iso_week)" \
+    DATA_DIR="$DATA_DIR" \
+      python3 -c "
+import os, json, datetime
+files = os.environ.get('WEEK_FILES', '').strip().split()
 daily = []
 for f in (files or []):
     try:
         daily.append(json.load(open(f)).get('dailyTokens', 0))
     except: pass
 avg = round(sum(daily)/len(daily)) if daily else 0
-with open('$week_file', 'w') as f:
-    json.dump({'week':'$(iso_week)','totalTokens':${total_tokens},'dailyAvg':avg,'dailyTokens':daily,'monthlyProgress':${progress}}, f, indent=2, ensure_ascii=False)
+wk_num = os.environ['WEEK_NUM']
+with open(os.environ['DATA_DIR'] + '/weekly-snapshots/' + wk_num + '.json', 'w') as f:
+    json.dump({'week': wk_num, 'totalTokens': int(os.environ['TOTAL_TOKENS']), 'dailyAvg': avg, 'dailyTokens': daily, 'monthlyProgress': float(os.environ['MONTHLY_PROGRESS'])}, f, indent=2, ensure_ascii=False)
 "
   fi
 
