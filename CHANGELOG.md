@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0
 
 ---
 
+## [Unreleased]
+
+### Enhanced
+
+- **scripts/pre-update-check.sh**: 完整重写为 8 项安全检查（+ allowBots/@everyone/@here 安全配置）
+- **docs/UPDATE.md**: 新增自动定时备份、Git Hook 保护、版本管理、检查清单分层
+- **scripts/safe-update.sh**: 新增 `--install-hook` 参数，委托 pre-update-check.sh 安装 Git Hook
+
+### Added
+
+- **Git Hook 保护**：pre-commit 钩子自动拦截真实 API Key / Token / .env 敏感文件
+
+---
+
 ## [1.2.0] — 2026-04-06
 
 ### Added
