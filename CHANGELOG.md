@@ -7,6 +7,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0
 
 ---
 
+## [Unreleased]
+
+> 2026-04-07
+
+### Added
+
+- **scripts/interactive-install.sh**: 交互式安装配置脚本（新增）
+  - 0=退出 / 1=安装 / 2=配置 主菜单
+  - 部门三预设：完整内阁制 / 精简版 / 自定义（15 部门逐个勾选）
+  - 统一模型模式（5 供应商预设 + 自定义 + 跳过）：Anthropic / OpenAI / DeepSeek / OpenRouter / Ollama
+  - 分 Agent 模型模式（每个 Agent 单独选模型）
+  - OpenRouter 多模型聚合支持
+  - Discord Token 逐 Agent 配置（已有 Token 保留不覆盖）
+  - CONFIG_DIR 双安装冲突检测
+  - 状态持久化至 `interactive-install.cfg`
+
+---
+
 ## [v1.3.0] — --自审修复版
 
 > 2026-04-07
