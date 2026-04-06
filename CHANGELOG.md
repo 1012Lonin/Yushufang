@@ -7,7 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0
 
 ---
 
-## [Unreleased]
+## [v1.3.0] — --自审修复版
+
+> 2026-04-07
 
 ### Fixed
 

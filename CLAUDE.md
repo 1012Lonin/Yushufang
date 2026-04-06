@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Yushufang** (御书房) is a multi-agent AI collaboration system built on the **[OpenClaw](https://github.com/openclaw/openclaw)** framework, customized for personal academic developers. It maps China's ancient Ming Dynasty governmental structure onto a modern AI agent team — each minister is a specialized AI agent (Discord Bot) with clear domain responsibility. Users issue "imperial decrees" by @mentioning agents in Discord.
 
-- License: MIT | Version: 1.2.0 | Author: Lonin
+- License: MIT | Version: 1.3.0 | Author: Lonin
 - Node.js >= 22.16.0 required
 
 ## Key Commands
