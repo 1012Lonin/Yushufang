@@ -56,7 +56,8 @@ warn()    { echo -e "  ${YELLOW}⚠${NC} $*"; }
 fail()    { echo -e "  ${RED}✗${NC} $*" >&2; }
 
 # 跨平台清屏（TERM=dumb 时 clear 不可用）
-_clear() { clear 2>/dev/null || printf '\n\n\n\n\n\n\n\n\n\n'; }
+# 仅在可清屏的终端使用，普通/SSH 环境用换行代替
+_clear() { clear 2>/dev/null || true; }
 
 # ============================================
 # CONFIG_DIR 检测（双安装冲突）
@@ -316,17 +317,14 @@ dept_custom_pick() {
   local running=true
 
   while $running; do
-    # 每次循环清屏
-    _clear
+    # 纯换行，不清屏（TERM=dumb 环境避免清屏失败）
+    echo ""
 
     echo ""
-    echo -e "  ${CYAN}┌──────────────────────────────────────────────────────────┐${NC}"
-    echo -e "  ${CYAN}│${NC}  自定义部门选择${NC}                                          ${CYAN}│${NC}"
-    echo -e "  ${CYAN}│${NC}  已选: ${result:-无}                                          ${CYAN}│${NC}"
-    echo -e "  ${CYAN}└──────────────────────────────────────────────────────────┘${NC}"
+    echo "  自定义部门选择  （已选: ${result:-无}）"
     echo ""
-    echo -e "  ${BOLD}  编号   部门名称          Agent数  功能说明${NC}"
-    echo -e "  ${BOLD}  ─────────────────────────────────────────────────────${NC}"
+    echo "  编号   部门名称          Agent数  功能说明"
+    echo "  ─────────────────────────────────────────────────────"
 
     # 显示所有部门
     for id in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
@@ -492,17 +490,13 @@ model_config_per_agent() {
 
 # 单个 Agent 模型选择
 agent_model_pick() {
-  _clear
   local agent_id="$1"
   local agent_name="$(_agent_display_name "$agent_id")"
   local current="${AGENT_MODEL_MAP[$agent_id]:-未配置}"
 
   echo ""
-  echo -e "  ${CYAN}┌────────────────────────────────────────────────────────┐${NC}"
-  echo -e "  ${CYAN}│${NC}  ${BOLD}Agent 模型配置${NC}                                       ${CYAN}│${NC}"
-  echo -e "  ${CYAN}└────────────────────────────────────────────────────────┘${NC}"
-  echo -e "  ${CYAN}  ${BOLD}[$agent_name · $agent_id]${NC}"
-  echo -e "  ${CYAN}  当前：$current${NC}"
+  echo "  Agent 模型配置  [$agent_name · $agent_id]"
+  echo "  当前：$current"
   echo ""
   echo "   1) Anthropic  claude-sonnet-4-6"
   echo "   2) OpenAI    gpt-4o"
@@ -939,17 +933,14 @@ config_flow() {
 
 # 配置单个 Agent 的 Discord Token
 discord_config_agent() {
-  _clear
+  echo ""
   local agent_id="$1"
   local cfg="$2"
   local name=$(_agent_display_name "$agent_id")
   local existing=$(jq -r ".channels.discord.accounts[\"$agent_id\"].token // \"\" " "$cfg" 2>/dev/null)
 
   echo ""
-  echo -e "  ${CYAN}┌────────────────────────────────────────────────────────┐${NC}"
-  echo -e "  ${CYAN}│${NC}  ${BOLD}Discord Token 配置${NC}                                   ${CYAN}│${NC}"
-  echo -e "  ${CYAN}└────────────────────────────────────────────────────────┘${NC}"
-  echo -e "  ${CYAN}  [${name} · ${agent_id}]${NC}"
+  echo "  Discord Token 配置  [$name · $agent_id]"
   echo ""
 
   # Token 掩码显示
