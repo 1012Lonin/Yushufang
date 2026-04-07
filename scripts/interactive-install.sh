@@ -55,6 +55,9 @@ ok()      { echo -e "  ${GREEN}✓${NC} $*"; }
 warn()    { echo -e "  ${YELLOW}⚠${NC} $*"; }
 fail()    { echo -e "  ${RED}✗${NC} $*" >&2; }
 
+# 跨平台清屏（TERM=dumb 时 clear 不可用）
+_clear() { clear 2>/dev/null || printf '\033[2J\033[H'; }
+
 # ============================================
 # CONFIG_DIR 检测（双安装冲突）
 # ============================================
@@ -217,7 +220,7 @@ declare -A AGENT_MODEL_MAP # 分 Agent 模式：agentId -> provider/modelId
 # 主菜单
 # ============================================
 main_menu() {
-  clear
+  _clear
   echo -e "${CYAN}╔════════════════════════════════════════╗${NC}"
   echo -e "${CYAN}║    🏯 御书房 · 交互式安装配置        ║${NC}"
   echo -e "${CYAN}╚════════════════════════════════════════╝${NC}"
@@ -314,7 +317,7 @@ dept_custom_pick() {
 
   while $running; do
     # 每次循环清屏
-    clear
+    _clear
 
     echo ""
     echo -e "  ${CYAN}┌──────────────────────────────────────────────────────────┐${NC}"
@@ -489,7 +492,7 @@ model_config_per_agent() {
 
 # 单个 Agent 模型选择
 agent_model_pick() {
-  clear
+  _clear
   local agent_id="$1"
   local agent_name="$(_agent_display_name "$agent_id")"
   local current="${AGENT_MODEL_MAP[$agent_id]:-未配置}"
@@ -936,7 +939,7 @@ config_flow() {
 
 # 配置单个 Agent 的 Discord Token
 discord_config_agent() {
-  clear
+  _clear
   local agent_id="$1"
   local cfg="$2"
   local name=$(_agent_display_name "$agent_id")
