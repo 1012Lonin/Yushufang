@@ -313,32 +313,39 @@ dept_custom_pick() {
   local running=true
 
   while $running; do
+    # 每次循环清屏
+    clear
+
     echo ""
-    echo "  ┌──────────────────────────────────────────────────────────┐"
-    echo "  │  自定义部门选择（已选: ${result:-无}）                        │"
-    echo "  └──────────────────────────────────────────────────────────┘"
+    echo -e "  ${CYAN}┌──────────────────────────────────────────────────────────┐${NC}"
+    echo -e "  ${CYAN}│${NC}  自定义部门选择${NC}                                          ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}  已选: ${result:-无}                                          ${CYAN}│${NC}"
+    echo -e "  ${CYAN}└──────────────────────────────────────────────────────────┘${NC}"
     echo ""
+    echo -e "  ${BOLD}  编号   部门名称          Agent数  功能说明${NC}"
+    echo -e "  ${BOLD}  ─────────────────────────────────────────────────────${NC}"
 
     # 显示所有部门
-    for id in $(seq 1 15); do
+    for id in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
       local def="${DEPT_DEFS[$id]}"
       local agents="${def%%|*}"
       local name="${def%|*}" && name="${name#*|}"
       local desc="${def##*|}"
-      local agent_count=$(echo "$agents" | tr ',' '\n' | grep -c .)
+      local agent_count
+      agent_count=$(echo "$agents" | tr ',' '\n' | grep -c .)
       local marker=""
       # 检查是否已选
       if echo ",$result," | grep -q ",$id,"; then
         marker="${GREEN}[已选]${NC} "
       fi
-      printf "  %2d) %b%-12s${NC} %-18s %s\n" "$id" "$marker" "$name" "($agent_count agent)" "$desc"
+      printf "  %2s) %b%-12s${NC} %-18s %s\n" "$id" "$marker" "$name" "($agent_count agent)" "$desc"
     done
 
     echo ""
-    echo "  0) 完成选择"
+    echo -e "  ${CYAN}  0) 完成选择${NC}"
     echo ""
 
-    read -p "输入编号（空格分隔，可多次输入）: " input </dev/tty
+    read -p "  输入编号（空格分隔，可多次输入，回车确认）: " input </dev/tty
     case "$input" in
       0) running=false ;;
       *)
@@ -482,14 +489,17 @@ model_config_per_agent() {
 
 # 单个 Agent 模型选择
 agent_model_pick() {
+  clear
   local agent_id="$1"
   local agent_name="$(_agent_display_name "$agent_id")"
   local current="${AGENT_MODEL_MAP[$agent_id]:-未配置}"
 
-  echo "  ┌──────────────────────────────────────────────────────┐"
-  echo -e "  │  ${BOLD}[${agent_name} · ${agent_id}]${NC}                       │"
-  echo "  └──────────────────────────────────────────────────────┘"
-  echo "  当前：$current"
+  echo ""
+  echo -e "  ${CYAN}┌────────────────────────────────────────────────────────┐${NC}"
+  echo -e "  ${CYAN}│${NC}  ${BOLD}Agent 模型配置${NC}                                       ${CYAN}│${NC}"
+  echo -e "  ${CYAN}└────────────────────────────────────────────────────────┘${NC}"
+  echo -e "  ${CYAN}  ${BOLD}[$agent_name · $agent_id]${NC}"
+  echo -e "  ${CYAN}  当前：$current${NC}"
   echo ""
   echo "   1) Anthropic  claude-sonnet-4-6"
   echo "   2) OpenAI    gpt-4o"
@@ -926,14 +936,18 @@ config_flow() {
 
 # 配置单个 Agent 的 Discord Token
 discord_config_agent() {
+  clear
   local agent_id="$1"
   local cfg="$2"
   local name=$(_agent_display_name "$agent_id")
   local existing=$(jq -r ".channels.discord.accounts[\"$agent_id\"].token // \"\" " "$cfg" 2>/dev/null)
 
-  echo "  ┌──────────────────────────────────────────────────────┐"
-  echo -e "  │  ${BOLD}[${name} · ${agent_id}]${NC}                              │"
-  echo "  └──────────────────────────────────────────────────────┘"
+  echo ""
+  echo -e "  ${CYAN}┌────────────────────────────────────────────────────────┐${NC}"
+  echo -e "  ${CYAN}│${NC}  ${BOLD}Discord Token 配置${NC}                                   ${CYAN}│${NC}"
+  echo -e "  ${CYAN}└────────────────────────────────────────────────────────┘${NC}"
+  echo -e "  ${CYAN}  [${name} · ${agent_id}]${NC}"
+  echo ""
 
   # Token 掩码显示
   if [ -n "$existing" ] && [ "${#existing}" -gt 20 ] && [ "$existing" != "YOUR_${agent_id^^}_BOT_TOKEN" ]; then
