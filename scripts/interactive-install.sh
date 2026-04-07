@@ -56,7 +56,7 @@ warn()    { echo -e "  ${YELLOW}⚠${NC} $*"; }
 fail()    { echo -e "  ${RED}✗${NC} $*" >&2; }
 
 # 跨平台清屏（TERM=dumb 时 clear 不可用）
-_clear() { clear 2>/dev/null || printf '\033[2J\033[H'; }
+_clear() { clear 2>/dev/null || printf '\n\n\n\n\n\n\n\n\n\n'; }
 
 # ============================================
 # CONFIG_DIR 检测（双安装冲突）
