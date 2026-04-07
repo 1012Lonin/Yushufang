@@ -1,9 +1,10 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 # ============================================
 # 御书房 · 交互式安装配置脚本
 #
-# 依赖：zsh（macOS/Linux 默认）、jq、openclaw
+# 依赖：bash 4+ 或 zsh、jq、openclaw
 # 用法：
+#   bash scripts/interactive-install.sh
 #   zsh scripts/interactive-install.sh
 # ============================================
 
@@ -23,8 +24,8 @@ NC=$'\033[0m'
 # ============================================
 # 脚本路径
 # ============================================
-SCRIPT_DIR="${0:a:h}"
-PROJECT_ROOT="${SCRIPT_DIR:h}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 CFG_FILE="$SCRIPT_DIR/interactive-install.cfg"
 
 # ============================================
